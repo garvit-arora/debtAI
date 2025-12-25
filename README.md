@@ -14,3 +14,10 @@ Erasor Flowchart - https://app.eraser.io/workspace/KvnKVGteqdHldOdwGfVZ?origin=s
 8. Setup Setu with API fetching
 9. Setup AA fully
 10. 
+
+# Font Style
+
+```font-family: ivypresto-text, serif;
+font-style: normal;
+font-weight: 400;
+```
