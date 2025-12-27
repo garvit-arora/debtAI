@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import logo from "../../assets/icons/logo.png";
 import { getDatabase, ref, get, set } from "firebase/database";
-import Loader from "../Loader";
+import Loader from "../Loader.jsx";
 import {
   getAuth,
   GoogleAuthProvider,
