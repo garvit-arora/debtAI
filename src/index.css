@@ -1,1 +1,22 @@
 @import "tailwindcss";
+:root{
+    --background--cream: #f8ecdd;
+    --text--brown: #5B2D2D;
+    --text--gray : #30302e;
+
+}
+.cream{
+    background-color: var(--background--cream);
+}
+.brownish{
+    color: var(--text--brown);
+}
+.gray{
+    color: var(--text--gray);
+}
+
+.pacifico {
+  font-family: "Pacifico", cursive;
+  /* font-weight:bolder; */
+  font-style: normal;
+}

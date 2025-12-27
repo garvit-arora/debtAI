@@ -17,7 +17,18 @@ Erasor Flowchart - https://app.eraser.io/workspace/KvnKVGteqdHldOdwGfVZ?origin=s
 
 # Font Style
 
-```font-family: ivypresto-text, serif;
+```
+font-family: ivypresto-text, serif;
 font-style: normal;
 font-weight: 400;
+```
+
+```
+--swatch--cream: #f8f6f0;
+    --swatch--brown: #5b2d2d;
+    --swatch--dark: #141414;
+    --swatch--purple: #6369e5;
+    --swatch--light-purple: #d1d8ff;
+    --swatch--mint: #edffd9;
+    --swatch--teal: #ecece5;
 ```
