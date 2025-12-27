@@ -6,20 +6,68 @@ export default function Sidebar() {
       <h1 className="text-2xl font-bold mb-8">TearsWipe</h1>
 
       <nav className="flex flex-col gap-4">
-        <NavLink to="/dashboard" className="hover:text-amber-400">
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
           Dashboard
         </NavLink>
 
-        <NavLink to="/analytics" className="hover:text-amber-400">
-          Analytics
+        <NavLink
+          to="/pending"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
+          Pending
         </NavLink>
 
-        <NavLink to="/profile" className="hover:text-amber-400">
-          Profile
+        <NavLink
+          to="/bank"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
+          Bank
         </NavLink>
 
-        <NavLink to="/settings" className="hover:text-amber-400">
-          Settings
+        <NavLink
+          to="/charts"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
+          Charts
+        </NavLink>
+        <NavLink
+          to="/calendar"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
+          Calendar
+        </NavLink>
+        <NavLink
+          to="/tarsai"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
+          TarsAI
         </NavLink>
       </nav>
     </div>
