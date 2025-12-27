@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import Loader from "../components/Loader.jsx";
+import Loader from "../Components/Loader.jsx"
 
 const LoaderContext = createContext();
 
