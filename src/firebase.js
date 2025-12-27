@@ -3,14 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCHwUF4HvNIV-GEG7H2eVwfvlP_5pm8oN0",
-  authDomain: "tearswipe.firebaseapp.com",
-  projectId: "tearswipe",
-  storageBucket: "tearswipe.firebasestorage.app",
-  messagingSenderId: "629590545878",
-  appId: "1:629590545878:web:c138770c6b57a0341a0077",
-  measurementId: "G-1D2K90L1MJ",
-  databaseURL : "https://tearswipe-default-rtdb.firebaseio.com",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 };
 
 // Initialize Firebase

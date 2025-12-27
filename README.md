@@ -5,7 +5,7 @@ Erasor Flowchart - https://app.eraser.io/workspace/KvnKVGteqdHldOdwGfVZ?origin=s
 # Tasks To be Done :
 
 1. Setup Azure OpenAI
-2. Buy Tearswipe.com ( 600 )
+2. Buy TearsWipe.com ( 600 )
 3. Decide Theme + Logo
 4. Finalize Landing Page
 5. Verify architecture of Flowchart
