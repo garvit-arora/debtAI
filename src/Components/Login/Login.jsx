@@ -56,26 +56,46 @@ function Login() {
     return;
   }
 
-  try {
-    setLoading(true);
+  setLoading(true);
 
+  try {
+    // Try logging in
     const result = await signInWithEmailAndPassword(auth, email, password);
     await afterLogin(result.user);
 
   } catch (error) {
-    if (
-      error.code === "auth/user-not-found" ||
-      error.code === "auth/invalid-credential"
-    ) {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      await afterLogin(result.user);
+
+    // User doesn't exist → create account
+    if (error.code === "auth/user-not-found") {
+      try {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await afterLogin(result.user);
+      } catch (err) {
+        alert(err.message);
+      }
+
+    // Wrong password
+    } else if (error.code === "auth/wrong-password") {
+      alert("Incorrect password");
+
+    // Email exists but signed up using Google/Github
+    } else if (error.code === "auth/account-exists-with-different-credential") {
+      alert("This email is linked with Google or GitHub. Please use that option.");
+
+    // Invalid email format
+    } else if (error.code === "auth/invalid-email") {
+      alert("Invalid email format");
+
+    // Any other error
     } else {
-      alert(error.message);
+      console.error(error);
+      alert("Something went wrong. Try again.");
     }
   } finally {
     setLoading(false);
   }
 };
+
 
 
   const provider = new GoogleAuthProvider();
