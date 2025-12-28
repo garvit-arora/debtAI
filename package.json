@@ -1,5 +1,5 @@
 {
-  "name": "tearswipe",
+  "name": "debtai",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,10 +14,14 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
     "firebase": "^12.7.0",
+    "flowbite": "^4.0.1",
+    "flowbite-react": "^0.12.14",
     "gsap": "^3.14.2",
     "motion": "^12.23.26",
     "react": "^19.2.0",
+    "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.11.0",
     "tailwindcss": "^4.1.18"
   },

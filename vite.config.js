@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   server : {
     proxy : {
-      '/api' : 'https://tearswipe.vercel.app/',
+      '/api' : 'https://debtai.in/',
 
     }
   },
