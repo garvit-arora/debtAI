@@ -171,7 +171,7 @@ function Login() {
 
   return (
     <>
-      <div className="cream h-screen global barlow-regular">
+      <div className="cream min-h-screen global">
         {loading && <Loader />}
         <div className="upper flex flex-row justify-between">
           <div className="headings  flex flex-col ">
