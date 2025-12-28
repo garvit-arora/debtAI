@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import Login from "../src/Components/Login/Login"
+import Hero from './Components/Hero/Hero';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from './Components/Dashboard/Dashboard';
 import Onboarding from './Components/Onboarding/Onboarding';
@@ -26,6 +27,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Onboarding />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/landing-page"
+        element={
+          <ProtectedRoute>
+            <Hero />
           </ProtectedRoute>
         }
       />

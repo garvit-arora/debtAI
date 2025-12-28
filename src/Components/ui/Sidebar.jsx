@@ -7,13 +7,14 @@ export default function Sidebar() {
 
       <nav className="flex flex-col gap-4">
         <NavLink
-          to="/dashboard"
+          to="/landing-page"
           className={({ isActive }) =>
             `hover:text-amber-400 ${
               isActive ? "text-amber-400 font-semibold" : ""
             }`
           }
         >
+          
           Dashboard
         </NavLink>
 
