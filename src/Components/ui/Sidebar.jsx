@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 export default function Sidebar() {
   return (
     <div className="h-screen w-64 bg-gray-900 text-white flex flex-col p-4">
-      <h1 className="text-2xl font-bold mb-8">TearsWipe</h1>
+      <h1 className="text-2xl font-bold mb-8">DebtAI</h1>
 
       <nav className="flex flex-col gap-4">
         <NavLink
