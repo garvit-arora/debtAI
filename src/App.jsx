@@ -14,14 +14,14 @@ function App() {
     <Routes>
       <Route path="/" element={<Hero />} />
 
-    //   <Route
-    //     path="/dashboard"
-    //     element={
-    //       <ProtectedRoute>
-    //         <Dashboard />
-    //       </ProtectedRoute>
-    //     }
-    //   />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/onboarding"
