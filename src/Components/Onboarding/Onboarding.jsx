@@ -5,24 +5,23 @@ import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 
 export default function Onboarding() {
-    const auth = getAuth();
-    const navigate = useNavigate();
+  const auth = getAuth();
+  const navigate = useNavigate();
 
-    const saveUser = async () => {
-      const user = auth.currentUser;
-      const db = getDatabase();
+  const saveUser = async () => {
+    const user = auth.currentUser;
+    const db = getDatabase();
 
-      await set(ref(db, "users/" + user.uid), {
-        email: user.email,
-        onboarded: true,
-        name:answers[0],
-        income:answers[1],
-        debts:answers[2],
-        createdAt: Date.now(),
-      });
-
-      navigate("/dashboard");
-    };
+    await set(ref(db, "users/" + user.uid), {
+      email: user.email,
+      onboarded: true,
+      name: answers[0],
+      income: answers[1],
+      debts: answers[2],
+      createdAt: Date.now(),
+    });
+    navigate("/dashboard");
+  };
 
   const titleRef = useRef(null);
   const questionRef = useRef(null);
@@ -31,6 +30,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [currentAnswer, setCurrentAnswer] = useState("");
+  const progressRef = useRef(null);
 
   const questions = [
     "What is your name?",
@@ -64,6 +64,15 @@ export default function Onboarding() {
       }
     );
   }, []);
+  useEffect(() => {
+    const progressPercent = ((step + 1) / questions.length) * 100;
+
+    gsap.to(progressRef.current, {
+      width: `${progressPercent}%`,
+      duration: 0.6,
+      ease: "power3.out",
+    });
+  }, [step]);
 
   const showQuestion = () => {
     gsap.fromTo(
@@ -93,7 +102,7 @@ export default function Onboarding() {
       { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
     );
   };
-const nextQuestion = () => {
+  const nextQuestion = () => {
     if (!currentAnswer.trim()) return;
 
     gsap.to([questionRef.current, inputRef.current, buttonRef.current], {
@@ -101,17 +110,24 @@ const nextQuestion = () => {
       y: -20,
       duration: 0.4,
       onComplete: () => {
-        setAnswers(prev => [...prev, currentAnswer]);
+        setAnswers((prev) => [...prev, currentAnswer]);
         setCurrentAnswer("");
-        setStep(prev => prev + 1);
+        setStep((prev) => prev + 1);
         setTimeout(showQuestion, 100);
       },
     });
   };
 
   return (
+    <>
     <div className="h-screen w-full flex flex-col items-center justify-start pt-24 gap-16 cream">
       {/* Heading */}
+      <div className="w-full max-w-xl h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          ref={progressRef}
+          className="h-full bg-black rounded-full w-0"
+        ></div>
+      </div>
       <h1 ref={titleRef} className="text-5xl font-bold tracking-wide">
         Onboarding
       </h1>
@@ -141,7 +157,7 @@ const nextQuestion = () => {
             style={{ opacity: 0 }}
             ref={buttonRef}
             onClick={nextQuestion}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:opacity-90"
+            className="px-6 py-2 bg-black cursor-pointer text-white rounded-lg hover:opacity-90"
           >
             Next →
           </button>
@@ -154,5 +170,6 @@ const nextQuestion = () => {
         </h2>
       )}
     </div>
+    </>
   );
 }

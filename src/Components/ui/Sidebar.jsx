@@ -67,7 +67,7 @@ export default function Sidebar() {
             }`
           }
         >
-          TarsAI
+          DebtAI
         </NavLink>
       </nav>
     </div>

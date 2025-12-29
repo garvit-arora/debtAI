@@ -173,9 +173,10 @@ function Login() {
     <>
       <div className="cream min-h-screen global">
         {loading && <Loader />}
-        <div className="upper flex flex-row justify-between">
+        <div className="upper flex flex-col sm:flex-row justify-between">
+
           <div className="headings  flex flex-col ">
-            <h1 className="text-3xl px-10 py-2">DebtAI</h1>
+            <h1 className="text-3xl py-2 text-center px-10 sm:text-left">DebtAI</h1>
             <h3 className=" px-10">
               Track. Understand. Take control — without the overwhelm.
             </h3>
@@ -189,13 +190,13 @@ function Login() {
             </button>
           </div>
         </div>
-        <div className="flex flex-row justify-between px-10 ">
+        <div className="flex flex-col sm:flex-row justify-between px-10 ">
           <div className="images">
             <img src={image1} alt="Releif From Debt" className="w-6xl " />
           </div>
           <div className="border-2 h-auto py-10 px-6 min-h-[80vh] border-amber-900 w-auto rounded-2xl ">
             <MdAccountBox size="4em" />
-            <h1 className="text-4xl">Welcome To DebtAI</h1>
+            <h1 className="text-4xl">Welcome To  <b>DebtAI</b> </h1>
             <h2>Clarity over chaos. Control over credit.</h2>
             <br />
             <form>
@@ -207,7 +208,7 @@ function Login() {
                     value={email}
                     onChange={handleEmail}
                     placeholder="Enter your E-mail"
-                    className="border gray-border rounded-xl p-1.5 w-lg"
+                    className="border gray-border rounded-xl p-1.5 sm:w-lg w-xs"
                   />
                 </div>
                 <div className="field2 flex flex-col gap-1">
@@ -217,13 +218,13 @@ function Login() {
                     value={password}
                     onChange={handlePassword}
                     placeholder="Enter your Password"
-                    className="border gray-border rounded-xl p-1.5 w-lg"
+                    className="border gray-border rounded-xl p-1.5 sm:w-lg w-xs"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleEmailAuth}
-                  className="w-lg p-2 bg-amber-950 text-white rounded-2xl cursor-pointer"
+                  className="sm:w-lg w-xs p-2 bg-amber-950 text-white rounded-2xl cursor-pointer"
                 >
                   Let's Start This
                 </button>
