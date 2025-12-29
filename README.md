@@ -15,6 +15,10 @@ Erasor Flowchart - https://app.eraser.io/workspace/KvnKVGteqdHldOdwGfVZ?origin=s
 9. 
 10. 
 
+# PPT
+
+https://www.canva.com/design/DAG84RV_cOM/ZZiuWcmEBIaXnNZnBXbV3Q/edit?utm_content=DAG84RV_cOM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
 # Font Style
 
 ```

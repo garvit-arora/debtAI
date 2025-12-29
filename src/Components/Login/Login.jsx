@@ -17,9 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { app } from "../../firebase";
 import { MdSupportAgent, MdAccountBox } from "react-icons/md";
-import image1 from "../../assets/images/image1.png"
-
-
+import image1 from "../../assets/images/image1.png";
 
 function Login() {
   const navigate = useNavigate();
@@ -52,100 +50,99 @@ function Login() {
       });
       navigate("/onboarding");
     } else {
-      navigate("/dashboard");
+      navigate("/0");
     }
   };
 
- const handleEmailAuth = async () => {
-  if (!email || !password) {
-    alert("Please enter email and password");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const methods = await fetchSignInMethodsForEmail(auth, email);
-    if (methods.length === 0) {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      await afterLogin(result.user);
-      return;
-    }
-    if (methods.includes("password")) {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      await afterLogin(result.user);
-      return;
-    }
-    if (methods.includes("google.com")) {
-      alert("This email is linked with Google. Please sign in using Google.");
+  const handleEmailAuth = async () => {
+    if (!email || !password) {
+      alert("Please enter email and password");
       return;
     }
 
-    if (methods.includes("github.com")) {
-      alert("This email is linked with GitHub. Please sign in using GitHub.");
-      return;
-    }
-
-    alert("This email is registered with another provider.");
-
-  } catch (error) {
-  if (error.code === "auth/email-already-in-use") {
+    setLoading(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      await afterLogin(result.user);
-    } catch (loginError) {
-      alert("Wrong password or account issue.");
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      if (methods.length === 0) {
+        const result = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        await afterLogin(result.user);
+        return;
+      }
+      if (methods.includes("password")) {
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        await afterLogin(result.user);
+        return;
+      }
+      if (methods.includes("google.com")) {
+        alert("This email is linked with Google. Please sign in using Google.");
+        return;
+      }
+
+      if (methods.includes("github.com")) {
+        alert("This email is linked with GitHub. Please sign in using GitHub.");
+        return;
+      }
+
+      alert("This email is registered with another provider.");
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        try {
+          const result = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+          await afterLogin(result.user);
+        } catch (loginError) {
+          alert("Wrong password or account issue.");
+        }
+      } else if (error.code === "auth/wrong-password") {
+        alert("Wrong password.");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Invalid email format.");
+      } else if (
+        error.code === "auth/account-exists-with-different-credential"
+      ) {
+        alert("Use Google or GitHub to login.");
+      } else {
+        console.error(error);
+        alert("Something went wrong.");
+      }
     }
-  } 
-  
-  else if (error.code === "auth/wrong-password") {
-    alert("Wrong password.");
-  } 
-  
-  else if (error.code === "auth/invalid-email") {
-    alert("Invalid email format.");
-  } 
-  
-  else if (error.code === "auth/account-exists-with-different-credential") {
-    alert("Use Google or GitHub to login.");
-  } 
-  
-  else {
-    console.error(error);
-    alert("Something went wrong.");
-  }
-}
-};
+  };
 
   const provider = new GoogleAuthProvider();
 
   const loginWithGoogle = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const result = await signInWithPopup(auth, googleProvider);
-    await afterLogin(result.user);
+      const result = await signInWithPopup(auth, googleProvider);
+      await afterLogin(result.user);
+    } catch (error) {
+      if (error.code === "auth/account-exists-with-different-credential") {
+        const email = error.customData.email;
+        const methods = await fetchSignInMethodsForEmail(auth, email);
 
-  } catch (error) {
-    if (error.code === "auth/account-exists-with-different-credential") {
-      const email = error.customData.email;
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-
-      if (methods.includes("password")) {
-        alert("This email is registered with Email & Password.");
-      } else if (methods.includes("github.com")) {
-        alert("This email is registered with GitHub.");
+        if (methods.includes("password")) {
+          alert("This email is registered with Email & Password.");
+        } else if (methods.includes("github.com")) {
+          alert("This email is registered with GitHub.");
+        } else {
+          alert("This email already exists.");
+        }
       } else {
-        alert("This email already exists.");
+        console.error(error);
+        alert("Google sign-in failed.");
       }
-    } else {
-      console.error(error);
-      alert("Google sign-in failed.");
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const loginWithGithub = async () => {
     try {
@@ -229,7 +226,8 @@ function Login() {
                 </button>
                 <h3 className="text-center">OR</h3>
                 <div className="buttons flex flex-col gap-2">
-                  <button type="button"
+                  <button
+                    type="button"
                     className="font-semibold cursor-pointer p-2 border-2 border-amber-700 rounded-xl hover:scale-101 hover:ease-in-out "
                     onClick={loginWithGoogle}
                     disabled={loading}
@@ -270,7 +268,8 @@ function Login() {
                       Continue with Google
                     </span>
                   </button>
-                  <button type="button"
+                  <button
+                    type="button"
                     className="font-semibold hover:scale-101 hover:ease-in-out cursor-pointer p-2 border-2 border-amber-700 rounded-xl"
                     onClick={loginWithGithub}
                     disabled={loading}
@@ -290,7 +289,16 @@ function Login() {
                     </span>
                   </button>
                 </div>
-                <p className="text-center">By Continuing, You agree to our <a href="https://debtai.in/terms-and-policies" className="text-blue-700 hover:underline">Terms and Policies</a>. </p>
+                <p className="text-center">
+                  By Continuing, You agree to our{" "}
+                  <a
+                    href="https://debtai.in/terms-and-policies"
+                    className="text-blue-700 hover:underline"
+                  >
+                    Terms and Policies
+                  </a>
+                  .{" "}
+                </p>
               </div>
             </form>
           </div>

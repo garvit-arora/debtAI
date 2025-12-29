@@ -11,7 +11,7 @@ import ProtectedRoute from "./../routes/ProtectedRoute";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Hero />} />
 
       <Route
         path="/dashboard"
@@ -32,10 +32,10 @@ function App() {
       />
 
       <Route
-        path="/landing-page"
+        path="/login"
         element={
           <ProtectedRoute>
-            <Hero />
+            <Login />
           </ProtectedRoute>
         }
       />
