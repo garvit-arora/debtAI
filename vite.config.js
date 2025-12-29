@@ -4,13 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  server : {
-    proxy : {
-      '/api' : 'https://debtai.in/',
-
-    }
-  },
+  
   plugins: [react(),
     tailwindcss(),
   ],
+  server: {
+    host: true,
+    port: 5173
+  }
 })

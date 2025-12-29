@@ -1,10 +1,20 @@
 @import "tailwindcss";
 :root{
     --background--cream: #f8ecdd;
-    --text--brown: #5B2D2D;
-    --text--gray : #30302e;
+    --brown: #5B2D2D;
+    --gray : #30302e;
+    --dark: #141414;
+    --purple: #6369e5;
+    --light-purple: #d1d8ff;
+    --mint: #edffd9;
+    --teal: #ecece5;
 
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
 .cream{
     background-color: var(--background--cream);
 }
@@ -12,10 +22,30 @@
     border:1px solid #b2abab,
 }
 .brownish{
-    color: var(--text--brown);
+    color: var(--brown);
 }
 .gray{
-    color: var(--text--gray);
+    color: var(--gray);
+}
+
+.dark {
+    color: var(--dark);
+}
+
+.purple {
+    color: var(--purple);
+}
+
+.light-purple {
+    color: var(--light-purple);
+}
+
+.mint {
+    color: var(--mint);
+}
+
+.teal {
+    color: var(--teal);
 }
 
 .pacifico {
@@ -28,6 +58,27 @@
   font-weight: 400;
   font-style: normal;
 }
+
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important; /* Prevents conflicts with native scroll */
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
 @keyframes onbaording-title{
     
 }
