@@ -19,8 +19,15 @@ import DomeGallery from "../ui/DomeGallery";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { Navigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
+// const handleSubmit =()=>{
+//   const navigate = Navigate()
+//   const handleSubmit =()=>{
+//           navigate("/login")
+//       }
+// }
 
 const navLinkClass =
   "relative text-l font-semibold text-(--brown) transition-colors duration-300 ease-out hover:text-(--purple) drop-shadow-[0px_1px_0.5px_rgba(255,255,255,0.7)]";
@@ -49,7 +56,7 @@ function Hero() {
         overflow: "hidden",
         display: "none",
       });
-
+      
       const onEnter = () => {
         gsap.set(expanded, { display: "flex" });
 
@@ -220,13 +227,13 @@ function Hero() {
               <a href="/about" className={navLinkClass}>
                 About Us
               </a>
-              <a href="/features" className={navLinkClass}>
+              <a href="#features" className={navLinkClass}>
                 Features
               </a>
-              <a href="/founders" className={navLinkClass}>
+              <a href="#founders" className={navLinkClass}>
                 Founders
               </a>
-              <a href="/testimonials" className={navLinkClass}>
+              <a href="#testimonials" className={navLinkClass}>
                 Testimonials
               </a>
               <a
@@ -264,13 +271,15 @@ function Hero() {
         </p>
 
         <div className="hero-element flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <button className="px-8 py-4 rounded-full bg-orange-950 text-(--teal) text-lg font-medium hover:bg-emerald-700 transition-all duration-300 shadow-lg shadow-stone-900/20 flex items-center justify-center gap-2 group">
-            Start your journey
+          <button type="button"
+
+          className="px-8 py-4 cursor-pointer rounded-full bg-orange-950 text-(--teal) text-lg font-medium hover:bg-emerald-700 transition-all duration-300 shadow-lg shadow-stone-900/20 flex items-center justify-center gap-2 group">
+           <a href="/login">Start your journey</a> 
             <BsArrowRight className="group-hover:translate-x-1 transition-transform" />
           </button>
 
-          <button className="px-8 py-4 rounded-full bg-gray-100 text-stone-700 border border-stone-300 text-lg font-medium hover:bg-(--teal) hover:border-stone-500 transition-all duration-300">
-            View Demo
+          <button className="px-8 py-4 rounded-full bg-gray-100 text-stone-700 border border-stone-300 text-lg font-medium hover:bg-(--teal) hover:border-stone-500 cursor-pointer transition-all duration-300">
+            Contact Us
           </button>
         </div>
       </section>
@@ -335,7 +344,7 @@ function Hero() {
         </div>
       </section>
 
-      <section className="pb-22 bg-(--teal)">
+      <section id="founders" className="pb-22 bg-(--teal)">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 section-heading">
             <h2 className="text-5xl font-bold text-(--brown)">
@@ -349,7 +358,7 @@ function Hero() {
             </a>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2  gap-8">
             <FounderCard
               name="Garvit Arora"
               role="Founder & CEO"
@@ -367,7 +376,7 @@ function Hero() {
 
       <section className="py-32 bg-gray-950 text-(--light-purple) overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 text-center mb-12 section-heading">
-          <h2 className="text-5xl font-semibold bg-clip-text text-(--light-purple) mb-6">
+          <h2 id="testimonials" className="text-5xl font-semibold bg-clip-text text-(--light-purple) mb-6">
             What People Say
           </h2>
           <p className="text-stone-300">

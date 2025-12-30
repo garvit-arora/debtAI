@@ -7,10 +7,12 @@ import Dashboard from './Components/Dashboard/Dashboard';
 import Onboarding from './Components/Onboarding/Onboarding';
 import ProtectedRoute from "./../routes/ProtectedRoute";
 import DebtAI from './Components/DebtAI/DebtAI';
-
+import CustomCursor from './Components/ui/CustomCursor';
 
 function App() {
   return (
+    <>
+    {/* <CustomCursor /> */}
     <Routes>
       <Route path="/" element={<Hero />} />
 
@@ -19,6 +21,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/debtai"
+        element={
+          <ProtectedRoute>
+            <DebtAI />
           </ProtectedRoute>
         }
       />
@@ -41,7 +51,7 @@ function App() {
         }
       />
     </Routes>
-    // <Onboarding />
+  </>
   );
 }
 

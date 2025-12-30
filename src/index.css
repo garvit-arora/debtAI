@@ -10,11 +10,20 @@
     --teal: #ecece5;
 
 }
+*{
+   cursor: url('/public/cursor.svg'),auto !important;
+}
 
 html {
   scroll-behavior: smooth;
+ 
 }
-
+a, 
+button, 
+input[type="submit"], 
+.clickable {
+  cursor: url('/public/pointer.svg'), pointer !important;
+}
 .cream{
     background-color: var(--background--cream);
 }
