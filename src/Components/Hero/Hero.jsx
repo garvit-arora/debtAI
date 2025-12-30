@@ -44,6 +44,23 @@ function Hero() {
   const footerRef = useRef(null);
   const navigate = useNavigate();
   useEffect(() => {
+    const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+      });
+
+      lenis.on("scroll", ScrollTrigger.update);
+
+      // Add Lenis to GSAP's animation loop
+      const tickerFunction = (time) => {
+        lenis.raf(time * 1000);
+      };
+      gsap.ticker.add(tickerFunction);
+
+      // Disable lag smoothing for smoother scroll feels
+      gsap.ticker.lagSmoothing(0);
+
     let ctx = gsap.context(() => {
       // 1. Navbar Expansion Logic
       const expanded = expandedRef.current;
@@ -159,23 +176,7 @@ function Hero() {
         }
       );
 
-      const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true,
-      });
-
-      lenis.on("scroll", ScrollTrigger.update);
-
-      // Add Lenis to GSAP's animation loop
-      const tickerFunction = (time) => {
-        lenis.raf(time * 1000);
-      };
-      gsap.ticker.add(tickerFunction);
-
-      // Disable lag smoothing for smoother scroll feels
-      gsap.ticker.lagSmoothing(0);
-
+      
       // Cleanup event listeners
       return () => {
         header.removeEventListener("mouseenter", onEnter);
