@@ -19,7 +19,7 @@ import DomeGallery from "../ui/DomeGallery";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 // const handleSubmit =()=>{
@@ -42,7 +42,7 @@ function Hero() {
   const featuresRef = useRef(null);
   const footerTriggerRef = useRef(null);
   const footerRef = useRef(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     let ctx = gsap.context(() => {
       // 1. Navbar Expansion Logic
@@ -272,9 +272,8 @@ function Hero() {
 
         <div className="hero-element flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <button type="button"
-
-          className="px-8 py-4 cursor-pointer rounded-full bg-orange-950 text-(--teal) text-lg font-medium hover:bg-emerald-700 transition-all duration-300 shadow-lg shadow-stone-900/20 flex items-center justify-center gap-2 group">
-           <a href="/login">Start your journey</a> 
+          className="px-8 py-4 cursor-pointer rounded-full bg-orange-950 text-(--teal) text-lg font-medium hover:bg-emerald-700 transition-all duration-300 shadow-lg shadow-stone-900/20 flex items-center justify-center gap-2 group" onClick={() => navigate('/login')}>
+           Start your journey
             <BsArrowRight className="group-hover:translate-x-1 transition-transform" />
           </button>
 
