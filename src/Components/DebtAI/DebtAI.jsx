@@ -93,8 +93,9 @@ function DebtAI() {
   const auth = getAuth(app);
   const db = getDatabase(app);
   const messagesEndRef = useRef(null);
-const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [input, setInput] = useState("");
   const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -111,6 +112,20 @@ const backendURL = import.meta.env.VITE_BACKEND_URL;
     });
     return () => unsubscribe();
   }, [auth]);
+
+  useEffect(() => {
+    if (user) {
+      const userRef = ref(db, `users/${user.uid}`);
+      const unsubscribe = onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const { conversations, ...profileData } = data;
+          setUserData(profileData);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [user, db]);
 
   useEffect(() => {
     if (user) {
@@ -219,7 +234,7 @@ const backendURL = import.meta.env.VITE_BACKEND_URL;
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: textToSend,
-          userData: { income: 30000, expenses: 20000, goal: "clear debt" },
+          userData: userData || {},
         }),
       });
 
