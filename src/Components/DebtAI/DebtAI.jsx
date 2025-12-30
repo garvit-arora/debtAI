@@ -3,10 +3,43 @@ import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import send from "../../assets/images/send.svg";
-import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete } from "react-icons/md";
+import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose } from "react-icons/md";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, push, onValue, serverTimestamp, remove } from "firebase/database";
 import { app } from "../../firebase";
+
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl transform scale-100 transition-transform">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4 text-amber-600">
+             <MdWarningAmber size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+          <p className="text-gray-500 mb-6 text-sm">{message}</p>
+          
+          <div className="flex gap-3 w-full">
+            <button 
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={onConfirm}
+              className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const BotMessage = ({ text, shouldAnimate }) => {
   const [displayResponse, setDisplayResponse] = useState("");
@@ -60,13 +93,17 @@ function DebtAI() {
   const auth = getAuth(app);
   const db = getDatabase(app);
   const messagesEndRef = useRef(null);
-
+const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [user, setUser] = useState(null);
   const [input, setInput] = useState("");
   const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -121,13 +158,30 @@ function DebtAI() {
   const createNewChat = () => {
     setCurrentSessionId(null);
     setMessages([]);
+    setShowMobileSidebar(false);
   };
 
-  const deleteChat = async (e, sessionId) => {
+  const handleSessionClick = (id) => {
+    setCurrentSessionId(id);
+    setShowMobileSidebar(false);
+  }
+
+  const initiateDelete = (e, sessionId) => {
     e.stopPropagation();
-    if(!window.confirm("Delete this chat?")) return;
-    await remove(ref(db, `users/${user.uid}/conversations/${sessionId}`));
-    if(currentSessionId === sessionId) createNewChat();
+    setChatToDelete(sessionId);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (chatToDelete && user) {
+      await remove(ref(db, `users/${user.uid}/conversations/${chatToDelete}`));
+      if(currentSessionId === chatToDelete) {
+        setCurrentSessionId(null);
+        setMessages([]);
+      }
+    }
+    setIsModalOpen(false);
+    setChatToDelete(null);
   };
 
   const handleSend = async () => {
@@ -160,7 +214,7 @@ function DebtAI() {
     setIsTyping(true);
 
     try {
-      const response = await fetch("http://localhost:5000/chat", {
+      const response = await fetch(`${backendURL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -188,19 +242,38 @@ function DebtAI() {
   const displayMessages = messages.map((msg, index) => {
     const isRecent = (Date.now() - (msg.timestamp || Date.now())) < 10000;
     const shouldAnimate = msg.sender === 'bot' && isRecent && (index === messages.length - 1);
-    
     return { ...msg, shouldAnimate };
   });
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#FAF3E0]">
+    <div className="flex h-screen w-full overflow-hidden bg-[#FAF3E0] relative">
       
-      <div className="w-64 bg-gray-900 text-white flex flex-col flex-shrink-0 z-20 shadow-xl">
+      <ConfirmationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Chat?"
+        message="Are you sure you want to delete this conversation? This action cannot be undone."
+      />
+
+      {showMobileSidebar && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
+      <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${showMobileSidebar ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
             <h2 className="font-bold text-lg">Chat History</h2>
-            <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white" title="Back to Dashboard">
-                <MdArrowBack size={24} />
-            </button>
+            <div className="flex gap-2">
+                <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white cursor-pointer" title="Back to Dashboard">
+                    <MdArrowBack size={24} />
+                </button>
+                <button onClick={() => setShowMobileSidebar(false)} className="text-gray-400 hover:text-white md:hidden" title="Close Menu">
+                    <MdClose size={24} />
+                </button>
+            </div>
         </div>
 
         <div className="p-4">
@@ -217,7 +290,7 @@ function DebtAI() {
             {sessions.map((session) => (
                 <div 
                     key={session.id}
-                    onClick={() => setCurrentSessionId(session.id)}
+                    onClick={() => handleSessionClick(session.id)}
                     className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer mb-1 transition-colors ${
                         currentSessionId === session.id ? "bg-gray-800 text-amber-400" : "hover:bg-gray-800 text-gray-300"
                     }`}
@@ -227,10 +300,10 @@ function DebtAI() {
                         <span className="truncate text-sm">{session.title || "Untitled Chat"}</span>
                     </div>
                     <button 
-                        onClick={(e) => deleteChat(e, session.id)}
-                        className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
+                        onClick={(e) => initiateDelete(e, session.id)}
+                        className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-1 hover:bg-gray-700 rounded"
                     >
-                        <MdDelete />
+                        <MdDelete size={18} />
                     </button>
                 </div>
             ))}
@@ -239,27 +312,34 @@ function DebtAI() {
 
       <div className="relative flex-1 flex flex-col h-full bg-gradient-to-tr from-[#FAF3E0] via-[#E5D4FF] to-[#C1A7FF]">
         
+        <button 
+            onClick={() => setShowMobileSidebar(true)}
+            className="md:hidden absolute top-4 left-4 z-10 p-2 bg-white/50 backdrop-blur-md rounded-full shadow-sm text-gray-800 hover:bg-white"
+        >
+            <MdMenu size={24} />
+        </button>
+
         {!currentSessionId && messages.length === 0 && (
-             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 opacity-60 pointer-events-none">
+             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 opacity-60 pointer-events-none px-4 text-center">
                 <h1 className="text-4xl font-bold mb-2 text-purple-900">DebtAI</h1>
                 <p>Start a new conversation to get help.</p>
              </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 pb-32 flex flex-col gap-4">
+        <div className="flex-1 overflow-y-auto p-4 pb-32 flex flex-col gap-4 pt-16 md:pt-4">
           {displayMessages.map((msg, index) => {
             const isBot = msg.sender === "bot";
             return (
               <div
                 key={index}
-                className={`max-w-[85%] p-4 rounded-2xl shadow-sm ${
+                className={`max-w-[90%] sm:max-w-[85%] p-4 rounded-2xl shadow-sm ${
                   !isBot
                     ? "bg-purple-700 text-white self-end rounded-br-none"
                     : "bg-white/90 backdrop-blur-sm self-start rounded-bl-none border border-white/50"
                 }`}
               >
                 {!isBot ? (
-                    <div className="whitespace-pre-wrap">{msg.text}</div>
+                    <div className="whitespace-pre-wrap break-words">{msg.text}</div>
                 ) : (
                     <BotMessage text={msg.text} shouldAnimate={msg.shouldAnimate} />
                 )}
@@ -281,14 +361,14 @@ function DebtAI() {
         </div>
 
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-tr from-[#e3daf7] via-[#e3d9f2] to-[#f9e0fa] py-4 flex justify-center z-10 border-t border-purple-100">
-          <div className="relative w-[90%] sm:w-150">
+          <div className="relative w-[95%] sm:w-[90%] sm:max-w-3xl">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               rows={1}
-              placeholder={user ? "Ask about your debt plan..." : "Please login to chat"}
+              placeholder={user ? "Ask about your debt..." : "Please login"}
               disabled={!user || isTyping}
-              className="w-full resize-none rounded-3xl p-4 pr-14 border border-purple-200 bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-900 placeholder-gray-500 transition-all shadow-sm"
+              className="w-full resize-none rounded-3xl p-4 pr-14 border border-purple-200 bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-900 placeholder-gray-500 transition-all shadow-sm max-h-32"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -300,7 +380,7 @@ function DebtAI() {
               type="button"
               onClick={handleSend}
               disabled={!user || isTyping}
-              className="absolute right-3 bottom-4 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
+              className="absolute right-3 bottom-3 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
             >
               <img src={send} alt="Send" className="w-5 h-5 invert" /> 
             </button>
