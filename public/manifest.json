@@ -1,0 +1,20 @@
+{
+  "short_name": "DebtAI",
+  "name": "DebtAI: Finance Planner",
+  "icons": [
+    {
+      "src": "/temp1.webp",
+      "type": "image/webp",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/temp2.jpg",
+      "type": "image/jpg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

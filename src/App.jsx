@@ -9,6 +9,7 @@ import ProtectedRoute from "./../routes/ProtectedRoute";
 import DebtAI from './Components/DebtAI/DebtAI';
 import { AuthProvider } from './context/AuthContent';
 import NotFound from './Components/404Page/404Page';
+import InstallPrompt from './Components/InstallPrompt/InstallPrompt';
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
       />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <InstallPrompt />
     
   </AuthProvider>
   </>
