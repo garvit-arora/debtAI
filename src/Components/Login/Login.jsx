@@ -50,7 +50,7 @@ function Login() {
       });
       navigate("/onboarding");
     } else {
-      navigate("/0");
+      navigate("/dashboard");
     }
   };
 

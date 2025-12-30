@@ -2,7 +2,9 @@ import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
   return (
-    <div className="h-screen w-64 bg-gray-900 text-white flex flex-col p-4">
+    // Added 'flex-shrink-0' to prevent squishing
+    // Changed 'z-99' to 'z-50' (standard Tailwind) or use 'z-[99]'
+    <div className="h-screen w-64 flex-shrink-0 bg-gray-900 text-white flex flex-col p-4 z-50">
       <h1 className="text-2xl font-bold mb-8">DebtAI</h1>
 
       <nav className="flex flex-col gap-4">
@@ -14,7 +16,6 @@ export default function Sidebar() {
             }`
           }
         >
-          
           Dashboard
         </NavLink>
 
@@ -61,7 +62,7 @@ export default function Sidebar() {
           Calendar
         </NavLink>
         <NavLink
-          to="/tarsai"
+          to="/debtai"
           className={({ isActive }) =>
             `hover:text-amber-400 ${
               isActive ? "text-amber-400 font-semibold" : ""

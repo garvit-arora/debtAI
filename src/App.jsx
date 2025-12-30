@@ -12,7 +12,6 @@ import CustomCursor from './Components/ui/CustomCursor';
 function App() {
   return (
     <>
-    {/* <CustomCursor /> */}
     <Routes>
       <Route path="/" element={<Hero />} />
 
@@ -49,6 +48,7 @@ function App() {
         }
       />
     </Routes>
+    
   </>
   );
 }
