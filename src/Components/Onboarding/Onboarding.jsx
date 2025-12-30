@@ -63,6 +63,7 @@ export default function Onboarding() {
       };
     }
     if (phase === 3) return { text: "Choose your repayment strategy", type: "selection" };
+    if (phase === 4) return { text: "End User License Agreement", type: "terms" };
     return { text: "All done!", type: "text" };
   };
 
@@ -80,12 +81,13 @@ export default function Onboarding() {
   }, []);
 
   useEffect(() => {
-    const totalSteps = basicQuestions.length + 1 + (totalDebts * debtDetailQuestions.length) + 1;
+    const totalSteps = basicQuestions.length + 1 + (totalDebts * debtDetailQuestions.length) + 1 + 1;
     let completed = basicIndex;
     if (phase > 0) completed = basicQuestions.length;
     if (phase > 1) completed += 1;
     if (phase === 2) completed += (currentDebtIndex * debtDetailQuestions.length) + debtDetailStep;
-    if (phase === 3) completed = totalSteps - 1;
+    if (phase === 3) completed = totalSteps - 2;
+    if (phase === 4) completed = totalSteps - 1;
 
     const percent = Math.min((completed / (totalSteps || 1)) * 100, 100);
     gsap.to(progressRef.current, { width: `${percent}%`, duration: 0.5 });
@@ -162,10 +164,15 @@ export default function Onboarding() {
 
   const handleStrategySelect = (strategyId) => {
     transitionToNext(() => {
-      const finalData = { ...formData, strategy: strategyId };
-      setFormData(finalData);
-      setPhase(4);
-      saveToFirebase(finalData);
+      setFormData(prev => ({ ...prev, strategy: strategyId }));
+      setPhase(4); 
+    });
+  };
+
+  const handleAcceptTerms = () => {
+    transitionToNext(() => {
+        setPhase(5);
+        saveToFirebase(formData);
     });
   };
 
@@ -197,6 +204,9 @@ export default function Onboarding() {
         strategy: data.strategy,
         debts: processedDebts,
         createdAt: Date.now(),
+        termsAccepted: true,
+        termsAcceptedAt: Date.now(),
+        userAgent: navigator.userAgent
       });
       
       setTimeout(() => navigate("/dashboard"), 1500);
@@ -210,15 +220,18 @@ export default function Onboarding() {
         <div ref={progressRef} className="h-full bg-black rounded-full w-0"></div>
       </div>
 
-      <h1 ref={titleRef} className="text-4xl md:text-5xl font-bold tracking-tight">Onboarding</h1>
+      <h1 ref={titleRef} className="text-3xl md:text-5xl font-bold tracking-tight text-center">
+        {phase === 4 ? "Terms & Conditions" : "Onboarding"}
+      </h1>
 
-      {phase < 4 ? (
-        <div ref={containerRef} className="w-full max-w-md flex flex-col items-center gap-6">
+      {phase < 5 ? (
+        <div ref={containerRef} className="w-full max-w-lg flex flex-col items-center gap-6">
           
           <h2 className="text-2xl font-medium text-center opacity-0">
             {currentQ.text}
           </h2>
 
+          {/* INPUT PHASE */}
           {phase < 3 && (
             <>
               <input
@@ -240,6 +253,7 @@ export default function Onboarding() {
             </>
           )}
 
+          {/* STRATEGY PHASE */}
           {phase === 3 && (
             <div className="grid grid-cols-1 gap-3 w-full opacity-0">
               {strategies.map((strat) => (
@@ -254,11 +268,78 @@ export default function Onboarding() {
               ))}
             </div>
           )}
+
+          {/* TERMS & CONDITIONS PHASE */}
+          {phase === 4 && (
+            <div className="w-full opacity-0 flex flex-col gap-6">
+                
+                {/* Scrollable Terms Container */}
+                <div className="w-full h-96 bg-white/90 p-6 rounded-xl border border-gray-300 overflow-y-auto text-sm text-gray-700 shadow-inner leading-relaxed">
+                    
+                    <h3 className="font-bold text-gray-900 mb-2 uppercase text-xs tracking-wider">Last Updated: {new Date().toLocaleDateString()}</h3>
+                    
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">1. ACCEPTANCE OF TERMS</h4>
+                    <p className="mb-4">
+                        By accessing, downloading, or using the DebtAI platform ("Service"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree to these Terms, you may not use the Service. These Terms constitute a legally binding agreement between you and DebtAI.
+                    </p>
+                    
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">2. NO FINANCIAL ADVICE</h4>
+                    <p className="mb-4">
+                        <strong>IMPORTANT:</strong> DebtAI is a technology platform that provides information and AI-driven insights for educational and planning purposes only. We are <strong>not</strong> a bank, financial planner, broker, or investment advisor.
+                        <br/><br/>
+                        Nothing in the Service constitutes professional financial, legal, or tax advice. The strategies (e.g., "Snowball", "Avalanche") are generated based on mathematical models and user input. You should consult with a qualified professional before making significant financial decisions.
+                    </p>
+                    
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">3. ACCURACY OF INFORMATION</h4>
+                    <p className="mb-4">
+                        You are solely responsible for the accuracy, completeness, and timeliness of the financial data you input (e.g., income, debt amounts, interest rates). DebtAI does not verify your data. Incorrect inputs will result in incorrect analysis. We are not liable for any errors resulting from inaccurate user data.
+                    </p>
+                    
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">4. PRIVACY & DATA SECURITY</h4>
+                    <p className="mb-4">
+                        Your privacy is paramount. We collect and store your data using industry-standard encryption protocols via Google Firebase. We analyze your data to provide the Service. We do not sell your personal identifiable information (PII) to third-party advertisers without your explicit consent. By using the Service, you consent to our Data Privacy Policy.
+                    </p>
+
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">5. LIMITATION OF LIABILITY</h4>
+                    <p className="mb-4">
+                        TO THE FULLEST EXTENT PERMITTED BY LAW, DEBTAI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM (A) YOUR ACCESS TO OR USE OF OR INABILITY TO ACCESS OR USE THE SERVICE; (B) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE SERVICE.
+                    </p>
+
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">6. INDEMNIFICATION</h4>
+                    <p className="mb-4">
+                        You agree to defend, indemnify, and hold harmless DebtAI and its licensees and licensors, and their employees, contractors, agents, officers, and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees), resulting from or arising out of a) your use and access of the Service, or b) a breach of these Terms.
+                    </p>
+
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">7. MODIFICATIONS TO SERVICE</h4>
+                    <p className="mb-4">
+                        We reserve the right to modify or discontinue, temporarily or permanently, the Service (or any part thereof) with or without notice. You agree that DebtAI shall not be liable to you or to any third party for any modification, suspension, or discontinuance of the Service.
+                    </p>
+
+                    <h4 className="font-bold text-gray-900 mt-4 mb-1">8. GOVERNING LAW</h4>
+                    <p className="mb-4">
+                        These Terms shall be governed and construed in accordance with the laws of the jurisdiction in which the company is established, without regard to its conflict of law provisions.
+                    </p>
+
+                    <p className="mt-8 italic text-xs text-gray-500 border-t pt-4">
+                        By clicking "Agree & Create Account", you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.
+                    </p>
+                </div>
+
+                <button 
+                    onClick={handleAcceptTerms} 
+                    className="w-full py-4 bg-black text-white text-lg rounded-xl font-bold hover:bg-gray-900 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                    <span>Agree & Create Account</span>
+                    <span className="text-xl">→</span>
+                </button>
+            </div>
+          )}
+
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 animate-pulse mt-10">
           <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
-          <h2 className="text-2xl font-semibold">Analyzing your finances...</h2>
+          <h2 className="text-2xl font-semibold">Finalizing Setup...</h2>
         </div>
       )}
     </div>
