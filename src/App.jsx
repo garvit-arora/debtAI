@@ -7,11 +7,13 @@ import Dashboard from './Components/Dashboard/Dashboard';
 import Onboarding from './Components/Onboarding/Onboarding';
 import ProtectedRoute from "./../routes/ProtectedRoute";
 import DebtAI from './Components/DebtAI/DebtAI';
-import CustomCursor from './Components/ui/CustomCursor';
+import { AuthProvider } from './context/AuthContent';
+import NotFound from './Components/404Page/404Page';
 
 function App() {
   return (
     <>
+    <AuthProvider>
     <Routes>
       <Route path="/" element={<Hero />} />
 
@@ -47,8 +49,10 @@ function App() {
             <Login />
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
     
+  </AuthProvider>
   </>
   );
 }
