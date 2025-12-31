@@ -62,6 +62,16 @@ export default function Sidebar() {
           Calendar
         </NavLink>
         <NavLink
+          to="/stocks"
+          className={({ isActive }) =>
+            `hover:text-amber-400 ${
+              isActive ? "text-amber-400 font-semibold" : ""
+            }`
+          }
+        >
+          Stocks
+        </NavLink>
+        <NavLink
           to="/debtai"
           className={({ isActive }) =>
             `hover:text-amber-400 ${
