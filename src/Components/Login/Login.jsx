@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import logo from "../../assets/icons/logo.png";
+import logo from "../../assets/icons/logo.jpeg";
 import { getDatabase, ref, get, set } from "firebase/database";
 import Loader from "../Loader.jsx";
 import {

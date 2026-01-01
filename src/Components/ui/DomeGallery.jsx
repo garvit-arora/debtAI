@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useGesture } from '@use-gesture/react';
 import image1 from '../../assets/images/image1.png';
 import image2 from '../../assets/images/bg2.png';
-import image3 from '../../assets/icons/logo.png';
+import image3 from '../../assets/icons/logo.jpeg';
 import image4 from '../../assets/icons/logo2.png';
 import image5 from '../../assets/images/bg2.png';
 import image6 from '../../assets/images/bg2.png';

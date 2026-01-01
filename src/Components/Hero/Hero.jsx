@@ -9,7 +9,7 @@ import {
   BsLinkedin,
   BsTwitter,
 } from "react-icons/bs";
-import logo from "../../assets/icons/logo2.png";
+import logo from "../../assets/icons/logo.jpeg";
 import background from "../../assets/images/image1.png";
 import background2 from "../../assets/images/bg2.png";
 import founder1 from "../../assets/images/Founder1.jpg";
