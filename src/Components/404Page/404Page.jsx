@@ -57,7 +57,7 @@ const NotFound = () => {
                 Go Back
             </button>
             <button 
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/')}
                 className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gray-900 text-white font-bold shadow-xl hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
                 <MdHome size={22} />

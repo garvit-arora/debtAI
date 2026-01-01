@@ -36,7 +36,10 @@ input[type="submit"],
 .gray{
     color: var(--gray);
 }
-
+.highlight-blue::selection {
+  background-color: #45f8fe; 
+  color: #000000;          
+}
 .dark {
     color: var(--dark);
 }

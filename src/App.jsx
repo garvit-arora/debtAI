@@ -10,19 +10,39 @@ import DebtAI from './Components/DebtAI/DebtAI';
 import { AuthProvider } from './context/AuthContent';
 import NotFound from './Components/404Page/404Page';
 import InstallPrompt from './Components/InstallPrompt/InstallPrompt';
+import WaitingPage from './Components/WaitingPage.jsx/WaitingPage';
+import Pending from './Components/Pending/Pending';
+import LegacyTool from './Components/Stock/LegacyTool';
 
 function App() {
   return (
     <>
     <AuthProvider>
     <Routes>
-      <Route path="/" element={<Hero />} />
+      {/* <Route path="/" element={<Hero />} /> */}
+    <Route path="/" element={<WaitingPage />} />
 
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pending"
+        element={
+          <ProtectedRoute>
+            <Pending />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stocks"
+        element={
+          <ProtectedRoute>
+            <LegacyTool />
           </ProtectedRoute>
         }
       />
