@@ -204,14 +204,14 @@ function DebtAI() {
 
   const handleSend = async () => {
     // 1. LOG START - Look for this in CHROME/EDGE CONSOLE (F12)
-    console.log(">>> HANDLE SEND STARTING...");
+    // console.log(">>> HANDLE SEND STARTING...");
     
     // Check if variables exist
-    console.log("User:", user?.uid);
-    console.log("Input:", input);
+    // console.log("User:", user?.uid);
+    // console.log("Input:", input);
 
     if (!input.trim() || !user) {
-        console.log(">>> Returning early: No input or user");
+        // console.log(">>> Returning early: No input or user");
         return;
     }
 
@@ -219,9 +219,8 @@ function DebtAI() {
     setInput("");
     setIsTyping(true);
 
-    // MOVE TRY BLOCK UP TO CATCH FIREBASE ERRORS
     try {
-        console.log(">>> Step 1: Handling Session...");
+        // console.log(">>> Step 1: Handling Session...");
         
         let activeSessionId = currentSessionId;
         if (!activeSessionId) {
@@ -233,7 +232,7 @@ function DebtAI() {
             setCurrentSessionId(activeSessionId);
         }
 
-        console.log(">>> Step 2: Saving User Message to Firebase...");
+        // console.log(">>> Step 2: Saving User Message to Firebase...");
         
         // Update UI immediately
         const tempUserMsg = { sender: "user", text: textToSend, shouldAnimate: false };
@@ -249,8 +248,8 @@ function DebtAI() {
             shouldAnimate: false
         });
 
-        console.log(">>> Step 3: Fetching from Backend...");
-        console.log("Target URL:", `${backendURL}/chat`); // Verify this is not undefined!
+        // console.log(">>> Step 3: Fetching from Backend...");
+        // console.log("Target URL:", `${backendURL}/chat`); // Verify this is not undefined!
 
         const response = await fetch(`${backendURL}/chat`, {
             method: "POST",
@@ -261,14 +260,14 @@ function DebtAI() {
             }),
         });
 
-        console.log(">>> Step 4: Response Status:", response.status);
+        // console.log(">>> Step 4: Response Status:", response.status);
 
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log(">>> Step 5: DATA RECEIVED:", data);
+        // console.log(">>> Step 5: DATA RECEIVED:", data);
 
         const aiText = data.reply || "Error: No reply text received.";
 
@@ -279,12 +278,11 @@ function DebtAI() {
             isNew: true 
         });
         
-        console.log(">>> Step 6: Finished!");
+        // console.log(">>> Step 6: Finished!");
 
     } catch (error) {
         console.error(">>> CRITICAL ERROR IN HANDLESEND:", error);
         
-        // Show error visually in chat
         setMessages(prev => [...prev, { 
             sender: "bot", 
             text: `System Error: ${error.message}. Check F12 Console.`, 
