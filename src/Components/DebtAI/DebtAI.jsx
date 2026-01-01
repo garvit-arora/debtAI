@@ -46,8 +46,11 @@ const BotMessage = ({ text, shouldAnimate }) => {
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
+    // Safety check: If text is missing, force a fallback
+    const safeText = text || "⚠️ (No response text)";
+
     if (!shouldAnimate) {
-      setDisplayResponse(text);
+      setDisplayResponse(safeText);
       setCompleted(true);
       return;
     }
@@ -55,9 +58,9 @@ const BotMessage = ({ text, shouldAnimate }) => {
     setCompleted(false);
     let i = 0;
     const intervalId = setInterval(() => {
-      setDisplayResponse(text.slice(0, i + 1));
+      setDisplayResponse(safeText.slice(0, i + 1));
       i++;
-      if (i > text.length) {
+      if (i > safeText.length) {
         clearInterval(intervalId);
         setCompleted(true);
       }
@@ -82,7 +85,7 @@ const BotMessage = ({ text, shouldAnimate }) => {
           p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
         }}
       >
-        {completed ? text : displayResponse}
+        {completed ? (text || "⚠️ (No response text)") : displayResponse}
       </ReactMarkdown>
     </div>
   );
@@ -200,60 +203,97 @@ function DebtAI() {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || !user) return;
+    // 1. LOG START - Look for this in CHROME/EDGE CONSOLE (F12)
+    console.log(">>> HANDLE SEND STARTING...");
+    
+    // Check if variables exist
+    console.log("User:", user?.uid);
+    console.log("Input:", input);
+
+    if (!input.trim() || !user) {
+        console.log(">>> Returning early: No input or user");
+        return;
+    }
 
     const textToSend = input;
     setInput("");
-    
-    let activeSessionId = currentSessionId;
-    if (!activeSessionId) {
-      const newSessionRef = await push(ref(db, `users/${user.uid}/conversations`), {
-        createdAt: serverTimestamp(),
-        title: textToSend.slice(0, 30) + "..."
-      });
-      activeSessionId = newSessionRef.key;
-      setCurrentSessionId(activeSessionId);
-    }
-
-    const tempUserMsg = { sender: "user", text: textToSend, shouldAnimate: false };
-    setMessages(prev => [...prev, tempUserMsg]);
-
-    const messagesRef = ref(db, `users/${user.uid}/conversations/${activeSessionId}/messages`);
-    await push(messagesRef, {
-      sender: "user",
-      text: textToSend,
-      timestamp: serverTimestamp(),
-      shouldAnimate: false
-    });
-
     setIsTyping(true);
 
+    // MOVE TRY BLOCK UP TO CATCH FIREBASE ERRORS
     try {
-      const response = await fetch(`${backendURL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: textToSend,
-          userData: userData || {},
-        }),
-      });
+        console.log(">>> Step 1: Handling Session...");
+        
+        let activeSessionId = currentSessionId;
+        if (!activeSessionId) {
+            const newSessionRef = await push(ref(db, `users/${user.uid}/conversations`), {
+                createdAt: serverTimestamp(),
+                title: textToSend.slice(0, 30) + "..."
+            });
+            activeSessionId = newSessionRef.key;
+            setCurrentSessionId(activeSessionId);
+        }
 
-      const data = await response.json();
+        console.log(">>> Step 2: Saving User Message to Firebase...");
+        
+        // Update UI immediately
+        const tempUserMsg = { sender: "user", text: textToSend, shouldAnimate: false };
+        setMessages(prev => [...prev, tempUserMsg]);
 
-      await push(messagesRef, {
-        sender: "bot",
-        text: data.reply,
-        timestamp: serverTimestamp(), 
-        isNew: true 
-      });
+        const messagesRef = ref(db, `users/${user.uid}/conversations/${activeSessionId}/messages`);
+        
+        // Note: If this line fails, your internet or Firebase rules are blocking writes
+        await push(messagesRef, {
+            sender: "user",
+            text: textToSend,
+            timestamp: serverTimestamp(),
+            shouldAnimate: false
+        });
+
+        console.log(">>> Step 3: Fetching from Backend...");
+        console.log("Target URL:", `${backendURL}/chat`); // Verify this is not undefined!
+
+        const response = await fetch(`${backendURL}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: textToSend,
+                userData: userData || {},
+            }),
+        });
+
+        console.log(">>> Step 4: Response Status:", response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(">>> Step 5: DATA RECEIVED:", data);
+
+        const aiText = data.reply || "Error: No reply text received.";
+
+        await push(messagesRef, {
+            sender: "bot",
+            text: aiText,
+            timestamp: serverTimestamp(), 
+            isNew: true 
+        });
+        
+        console.log(">>> Step 6: Finished!");
 
     } catch (error) {
-      console.error(error);
+        console.error(">>> CRITICAL ERROR IN HANDLESEND:", error);
+        
+        // Show error visually in chat
+        setMessages(prev => [...prev, { 
+            sender: "bot", 
+            text: `System Error: ${error.message}. Check F12 Console.`, 
+            shouldAnimate: false 
+        }]);
     } finally {
-      setIsTyping(false);
+        setIsTyping(false);
     }
   };
-
   const displayMessages = messages.map((msg, index) => {
     const isRecent = (Date.now() - (msg.timestamp || Date.now())) < 10000;
     const shouldAnimate = msg.sender === 'bot' && isRecent && (index === messages.length - 1);
