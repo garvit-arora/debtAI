@@ -18,9 +18,6 @@ import logo from "../../assets/icons/logo.jpeg";
 const navClass = 
   "group flex flex-col items-center justify-center gap-1 p-1 md:p-2 w-full rounded-xl transition-all duration-300 hover:scale-102 hover:bg-[#4d3636] active:scale-95";
 
-// 2. TEXT
-// Using your Cream color (#f8ecdd) for text.
-// Mobile: Hidden (to save space) or very small. Laptop: Visible.
 const navText = 
   "hidden md:block text-[12px] font-bold tracking-wide text-[#f8ecdd] uppercase group-hover:text-[#edffd9] transition-colors";
 
@@ -91,11 +88,10 @@ export default function Sidebar() {
           <span className={navText}>Calendar</span>
         </NavLink>
 
-        {/* Profile & Settings Grouped for Logic */}
-        <NavLink to="/profile" className={navClass}>
+        {/* <NavLink to="/profile" className={navClass}>
           <User className={navIcons} />
           <span className={navText}>Profile</span>
-        </NavLink>
+        </NavLink> */}
 
         <NavLink to="/settings" className={navClass}>
           <Settings className={navIcons} />
