@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import Footer from "../ui/Footer";
 import Sidebar from "../ui/Sidebar";
+import ExpenseInputForm from "../ui/ExpenseInputForm";
+import CameraOverlay from "../ui/CameraOverlay";
+import { useNavigate } from "react-router-dom";
 
 import { 
   Plus, 
@@ -10,38 +13,40 @@ import {
   AlertTriangle, 
   TrendingUp, 
   DollarSign,
-  User
+  User,
+  Camera,      
+  Calendar,
+  Tag
 } from "lucide-react";
 
-// --- DUMMY DATA FOR VISUALS ---
-
-const quickActions = [
-  { id: 1, icon: <Plus />, label: "Add Expense", color: "bg-emerald-100 text-emerald-800" },
-  { id: 2, icon: <ScanLine />, label: "Scan Bill", color: "bg-orange-100 text-orange-800" },
-  { id: 3, icon: <ArrowUpRight />, label: "Transfer", color: "bg-blue-100 text-blue-800" },
-];
+const quickActionStyle = "relative h-16 w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
 
 function Dashboard() {
-    // State to track which quick button is expanded. 
-    // 'null' means none are expanded.
-  const [expandedAction, setExpandedAction] = useState(null);
+
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const navigate = useNavigate();
 
   return (
     
-    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white">
-      
+    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative">    
      
+      {showExpenseModal && (
+        // Pass a prop to close the modal from inside the form if needed
+        <ExpenseInputForm onClose={() => setShowExpenseModal(false)} />
+      )}
+
+      {showCamera && (
+        <CameraOverlay onClose={() => setShowCamera(false)} />
+      )}
+
+
       <div className="z-50">
         <Sidebar />
       </div>
-
     
-      <main className="flex-1 ml-0 md:ml-28 p-6 md:p-12 overflow-y-auto">
-        
-       
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          
-          
+      <main className="flex-1 ml-0 md:ml-28 p-6 md:p-12 overflow-y-auto">             
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">                   
           <div className="lg:col-span-2 flex flex-col gap-8">
             
             {/* HEADING */}
@@ -50,41 +55,42 @@ function Dashboard() {
                 Let's Start <br /> Strong!
               </h1>
               <p className="text-[#30302e] opacity-70">
-                Good Morning, Gaggu. You are on track to be debt-free by Dec 2026.
+                Good Morning, Pallavi. You are on track to be debt-free by Dec 2026.
               </p>
             </div>
 
-              {/* QUICK ACTIONS */}
-            <div className="flex gap-4">
-              {quickActions.map((action) => (
-                // If this ID matches 'expandedAction', width grows to 'w-48'.
+            {/* buttons */}
+            <div className="flex gap-4 flex-wrap">
+          
+                <button
+                  onClick={() =>  setShowExpenseModal(true) }
+                  className= {quickActionStyle}>
 
-                <div
-                  key={action.id}
-                  onClick={() => setExpandedAction(expandedAction === action.id ? null : action.id)}
-                  className={`
-                    relative h-16 rounded-[24px] cursor-pointer 
-                    transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] 
-                    flex items-center overflow-hidden shadow-sm hover:shadow-md
-                    ${expandedAction === action.id ? "w-48 bg-white" : "w-16 bg-white"}
-                  `}
-                >
-                 
-                  <div className={`w-16 h-16 flex items-center justify-center shrink-0 ${action.color} rounded-[24px]`}>
-                    {action.icon}
-                  </div>
-                  
-                  {/* 'whitespace-nowrap' prevents text wrapping during animation */}
-                  <div className="whitespace-nowrap ml-2 opacity-0 animate-fadeIn"
-                       style={{ opacity: expandedAction === action.id ? 1 : 0, transition: "opacity 0.3s 0.2s" }}>
-                    <span className="text-sm font-bold text-[#5B2D2D]">{action.label}</span>
-                  </div>
-                </div>
-              ))}
+                  <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-800 rounded-[24px]`}>
+                    { <Plus />}
+                  </div>                
+                  <div className="whitespace-nowrap  ml-2">
+                    <span>Add Expense</span>
+                  </div>                
+                </button>
+
+
+
+                <button
+                  onClick={() => setShowCamera(true)}
+                  className= {quickActionStyle}>
+
+                  <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-orange-100 text-orange-800 rounded-[24px]`}>
+                    <ScanLine />
+                  </div>                
+                  <div className="whitespace-nowrap  ml-2 ">
+                    <span>Scan Bill</span>
+                  </div>                
+                </button>
+              
             </div>
 
-            {/* PROGRESS BAR */}
-           
+            {/* PROGRESS BAR */}           
             <div className="bg-white/60 backdrop-blur-sm p-8 rounded-[30px] shadow-sm border border-white/40">
               <div className="flex justify-between items-end mb-4">
                 <div>
@@ -178,7 +184,7 @@ function Dashboard() {
                </div>
              </div>
              <button className="px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors">
-               Pay Now
+              Mark as Paid
              </button>
            </div>
         </div>

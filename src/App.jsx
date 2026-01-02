@@ -19,8 +19,8 @@ function App() {
     <>
     <AuthProvider>
     <Routes>
-      {/* <Route path="/" element={<Hero />} /> */}
-    <Route path="/" element={<WaitingPage />} />
+      <Route path="/" element={<Hero />} />
+    {/* <Route path="/" element={<WaitingPage />} /> */}
 
       <Route
         path="/dashboard"

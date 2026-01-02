@@ -11,7 +11,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import React from "react";
-import logo from "../../assets/icons/logo.jpeg";
+import logo2 from "../../assets/icons/logo2.png";
 
 
 
@@ -56,7 +56,7 @@ export default function Sidebar() {
 
       {/* LOGO: Hidden on mobile to save space, Visible on Laptop */}
       <NavLink to="/" className="hidden md:block mb-4 hover:scale-110 transition-transform shrink-0">
-        <img src={logo} alt="Logo" className="w-16 h-16 rounded-2xl shadow-md" />
+        <img src={logo2} alt="Logo" className="w-16 h-16" />
       </NavLink>
 
       {/* NAVIGATION ITEMS */}
@@ -71,6 +71,12 @@ export default function Sidebar() {
         <NavLink to="/alert" className={navClass}>
           <Bell className={navIcons} />
           <span className={navText}>Alerts</span>
+        </NavLink>
+
+        
+        <NavLink to="/pending" className={navClass}>
+          <ListTodo className={navIcons} />
+          <span className={navText}>Pending</span>
         </NavLink>
 
         <NavLink to="/stocks" className={navClass}>
@@ -93,10 +99,6 @@ export default function Sidebar() {
           <span className={navText}>Profile</span>
         </NavLink> */}
 
-        <NavLink to="/settings" className={navClass}>
-          <Settings className={navIcons} />
-          <span className={navText}>Config</span>
-        </NavLink>
         
       </nav>
     </div>
