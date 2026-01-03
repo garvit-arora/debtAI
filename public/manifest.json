@@ -3,13 +3,13 @@
   "name": "DebtAI: Finance Planner",
   "icons": [
     {
-      "src": "/temp1.webp",
-      "type": "image/webp",
+      "src": "/logo.jpeg",
+      "type": "image/jpeg",
       "sizes": "192x192"
     },
     {
-      "src": "/temp2.jpg",
-      "type": "image/jpg",
+      "src": "/logo.jpeg",
+      "type": "image/jpeg",
       "sizes": "512x512"
     }
   ],

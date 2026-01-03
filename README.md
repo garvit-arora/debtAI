@@ -4,14 +4,14 @@ Erasor Flowchart - https://app.eraser.io/workspace/KvnKVGteqdHldOdwGfVZ?origin=s
 
 # Tasks To be Done :
 
-1. Setup Azure OpenAI
+1. Setup Azure OpenAI - done
 2. Setup AA fully
-3. Decide Theme + Logo
-4. Finalize Landing Page
-5. Verify architecture of Flowchart
-6. Connect Appwrite
-7. Setup 1 more AI Microsoft Service
-8. Setup Setu with API fetching
+3. Decide Theme + Logo - done
+4. Finalize Landing Page- done
+5. Verify architecture of Flowchart - done
+6. Connect Appwrite - dropped
+7. Setup 1 more AI Microsoft Service - on it
+8. Setup Setu with API fetching - on it
 9. 
 10. 
 
