@@ -451,33 +451,114 @@ function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Chart 1 */}
-            <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col">
+           
+            {/* <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col">
               <h4 className="text-stone-500 font-bold text-sm mb-4">
                 Weekly Spending Trend
               </h4>
-             
-              <div className="flex-1 flex items-end justify-between gap-1 md:gap-2 px-2">
-                {trendData.map((dayData, i) => (
-                  <div key={i} className="w-full flex flex-col items-center gap-2 group relative">
-                    
-                    {/* Tooltip on Hover */}
-                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1 px-2 rounded-md whitespace-nowrap z-10">
-                        ${dayData.amount.toFixed(0)}
-                    </div>
-
-                    {/* The Bar */}
-                    <div className="w-full bg-emerald-50 rounded-t-lg relative h-32 md:h-40 flex items-end overflow-hidden">
-                      <div
-                        style={{ height: `${dayData.percent}%` }}
-                        className="w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500 min-h-[4px]"
-                      ></div>
-                    </div>
-                    
-                    {/* Day Label */}
-                    <span className="text-[10px] md:text-xs text-stone-400 font-bold">{dayData.day}</span>
+              
+              <div className="flex-1 flex items-end justify-between gap-2 px-2">
+                {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
+                  <div
+                    key={i}
+                    className="w-full bg-emerald-100 rounded-t-lg relative group"
+                  >
+                   
+                    <div
+                      style={{ height: `${h}%` }}
+                      className="absolute bottom-0 w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500"
+                    ></div>
                   </div>
                 ))}
+              </div>
+
+              <div className="flex justify-between mt-2 text-xs text-stone-400 font-bold">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+              </div>
+            </div> */}
+
+            {/* Chart 1: Spending Trend (Hybrid Fix + Enhanced Dots) */}
+            <div className="bg-white py-6 px-10 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col relative z-0 overflow-visible">
+              <h4 className="text-stone-500 font-bold text-sm mb-6">
+                Weekly Spending Trend
+              </h4>
+
+              {/* Graph Container */}
+              <div className="flex-1 relative w-full mb-6 z-0">
+                
+                {/* LAYER 1: The SVG Line (Background) */}
+                <svg
+                  className="absolute inset-0 w-full h-full overflow-visible z-0"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                >
+                  <polyline
+                    fill="none"
+                    stroke="#5B2D2D"
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
+                    points={trendData.map((d, i) => {
+                      const divisor = trendData.length > 1 ? trendData.length - 1 : 1;
+                      const x = (i / divisor) * 100;
+                      const y = 100 - d.percent;
+                      return `${x},${y}`;
+                    }).join(" ")}
+                  />
+                </svg>
+
+                {/* LAYER 2: HTML Dots & Tooltips (Foreground) */}
+                {trendData.map((d, i) => {
+                  const divisor = trendData.length > 1 ? trendData.length - 1 : 1;
+                  const leftPos = (i / divisor) * 100;
+                  const bottomPos = d.percent;
+
+                  return (
+                    <div
+                      key={i}
+                      // Increased w-8 h-8 creates a larger invisible hover target
+                      className="absolute group z-10 w-10 h-10 flex items-center justify-center cursor-pointer -translate-x-1/2 translate-y-1/2"
+                      style={{
+                        left: `${leftPos}%`,
+                        bottom: `${bottomPos}%`,
+                      }}
+                    >
+                      {/* ENHANCED DOT STRUCTURE */}
+                      
+                      {/* 1. The Glow Ring (Expands on hover) */}
+                      <div className="absolute w-full h-full bg-emerald-500/20 rounded-full scale-50 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"></div>
+                      
+                      {/* 2. The Main Dot (Solid center) */}
+                      <div className="relative z-10 w-3 h-3 bg-emerald-500 rounded-full border-[1px] border-white shadow-[0_2px_5px_rgba(16,185,129,0.3)] transition-all duration-300 group-hover:scale-125 group-hover:bg-emerald-600"></div>
+
+
+                      {/* The Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
+                        <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">
+                          ${d.amount.toFixed(0)}
+                        </div>
+                        {/* Little triangle arrow */}
+                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* LAYER 3: X-Axis Labels */}
+                <div className="absolute top-full w-full flex justify-between text-xs text-stone-400 font-bold mt-2">
+                  {trendData.map((d, i) => (
+                    // Negative margins ensure the text centers exactly under the dot's center point
+                    <div key={i} className="w-10 text-center -ml-5 first:ml-0 last:-ml-10 first:text-left last:text-right">
+                        {d.day}
+                    </div>
+                  ))}
+                </div>
+
               </div>
             </div>
 
