@@ -30,9 +30,7 @@ const navIcons =
 
 export default function Sidebar() {
   return (
-    // MAIN CONTAINER
-    // Mobile: Bottom floating pill, Horizontal Row (flex-row), Height auto, Width 90%
-    // Laptop (md:): Left floating pill, Vertical Column (flex-col), Height 95vh, Width 24 (w-24)
+   
     <div className="
       fixed z-50 
       
@@ -60,7 +58,6 @@ export default function Sidebar() {
       </NavLink>
 
       {/* NAVIGATION ITEMS */}
-      {/* 'justify-evenly' prevents overflow by spreading items perfectly */}
       <nav className="flex md:flex-col w-full h-full justify-evenly items-center gap-1">
 
         <NavLink to="/landing-page" className={navClass}>

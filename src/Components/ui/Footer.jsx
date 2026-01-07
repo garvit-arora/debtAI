@@ -2,6 +2,7 @@ import React from 'react'
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useNavigate } from "react-router-dom"; 
 import {
   BsArrowRight,
   BsArrowUpRight,
@@ -9,16 +10,17 @@ import {
   BsLinkedin,
   BsTwitter,
 } from "react-icons/bs";
-import logo from '../../assets/icons/logo.jpeg';
+import logo from '../../assets/icons/logo2.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const footerNavLinkClass =
   "hover:text-(--purple) transition-colors duration-300 ease-out";
 
-const Footer = () => {
+const Footer = ({buttonText, actionLink}) => {
     const footerTriggerRef = useRef(null);
     const footerRef = useRef(null);
+    const navigate = useNavigate();
 
     // const footerTl = gsap.timeline({
     //     scrollTrigger: {
@@ -85,8 +87,11 @@ const Footer = () => {
                       mind over profit. No judgment, just clarity.
                     </p>
                     <div className="flex gap-4 pt-4">
-                      <button className="px-8 py-4 mb-2 rounded-full bg-white text-orange-950 text-lg font-bold hover:bg-emerald-300 transition-colors flex items-center gap-2">
-                        Get Started Free <BsArrowRight />
+                      <button
+                      onClick={() => navigate(actionLink || "/newsletter")}
+                      className="px-8 py-4 mb-2 rounded-full bg-white text-orange-950 text-lg font-bold hover:bg-emerald-300 transition-colors flex items-center gap-2">
+                        
+                        {buttonText || "Subscribe to our Newsletter"} <BsArrowRight />
                       </button>
                     </div>
                   </div>
@@ -128,7 +133,7 @@ const Footer = () => {
                             href="#"
                             className="hover:text-(--mint) transition-colors"
                           >
-                            API
+                            Our Team
                           </a>
                         </li>
                       </ul>
@@ -181,7 +186,7 @@ const Footer = () => {
                     <img
                       src={logo}
                       alt="Logo"
-                      className="h-8 w-auto brightness-0 invert opacity-80"
+                      className="h-8 w-auto"
                     />
                     <span className="text-2xl font-bold text-white tracking-tight">
                       DebtAI

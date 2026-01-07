@@ -4,7 +4,9 @@ import Sidebar from "../ui/Sidebar";
 import ExpenseInputForm from "../ui/ExpenseInputForm";
 import CameraOverlay from "../ui/CameraOverlay";
 import { useNavigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getDatabase, ref, get } from "firebase/database";
+import { app } from "../../firebase";
 import {
   Plus,
   ScanLine,
@@ -17,26 +19,77 @@ import {
   Camera,
   Calendar,
   Tag,
+  Loader2
 } from "lucide-react";
-import { getAuth } from "firebase/auth";
-import { app } from "../../firebase"; // wherever you initialized Firebase
 
 const quickActionStyle =
   "relative h-16 w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
-  const auth = getAuth(app);
-  // user = auth.currentUser;
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (u) setUser(u);
-      else alert("You are not logged in!");
+
+  const navigate = useNavigate();
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+
+   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser); // Set the auth user state
+        const userRef = ref(db, "users/" + currentUser.uid);
+        try {
+          const snapshot = await get(userRef);
+          if (snapshot.exists()) {
+            setUserData(snapshot.val());
+          } else {
+            console.log("No data available");
+            // Optional: Redirect to onboarding
+             navigate("/onboarding"); 
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        navigate("/login");
+      }
     });
+
     return () => unsubscribe();
-  }, []);
-  // const [selectedFile, setSelectedFile] = useState(null);
+  }, [auth, db, navigate]);
+
+  // 3. Helper Functions to Process Data
+  
+  // Calculate "Debt Free Date" based on (Total Debt / Disposable Income)
+  const getDebtFreeDate = () => {
+    if (!userData || !userData.debts) return "Calculating...";
+    
+    const totalDebt = userData.debts.reduce((sum, debt) => sum + (parseFloat(debt.amount) || 0), 0);
+    const disposableIncome = (userData.income - userData.expenses);
+    
+    if (disposableIncome <= 0) return "Unknown";
+
+    const monthsToFreedom = Math.ceil(totalDebt / disposableIncome);
+    const date = new Date();
+    date.setMonth(date.getMonth() + monthsToFreedom);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
+  // Find the most urgent debt (highest stress or soonest due)
+  const getUrgentDebt = () => {
+    if (!userData || !userData.debts || userData.debts.length === 0) return null;
+    // Simple logic: return the one with highest stress for now
+    return userData.debts.reduce((prev, current) => (prev.stress > current.stress) ? prev : current);
+  };
+
+  const urgentDebt = getUrgentDebt();
 
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -49,7 +102,6 @@ function Dashboard() {
   // Upload function
   const handleUpload = async (file) => {
   if (!file) return;
-
   if (!user) {
     alert("User still loading. Try again in a second.");
     return;
@@ -59,19 +111,68 @@ function Dashboard() {
   formData.append("file", file);
   formData.append("userId", user.uid);
 
-  const res = await fetch("http://localhost:5000/upload-pdf", {
-    method: "POST",
-    body: formData,
-  });
+  try {
+        // Ensure your backend is running on port 5000
+        const res = await fetch(`${BACKEND_URL}/upload-pdf`, {
+        method: "POST",
+        body: formData,
+        });
+        const data = await res.json();
+        console.log("Uploaded:", data);
+        alert("Bill uploaded successfully!");
+    } catch (error) {
+        console.error("Upload failed:", error);
+        alert("Failed to upload bill.");
+    }
+  };
 
-  const data = await res.json();
-  console.log("Uploaded:", data);
-};
+  // const [showCamera, setShowCamera] = useState(false);
+   
+  //Process transactions to get category percentages
+  const getCategoryBreakdown = () => {
+    // If no transactions exist, return empty
+    if (!userData || !userData.transactions) return [];
 
+    const transactions = Object.values(userData.transactions);
+    const total = transactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    
+    // Group by category
+    const grouped = transactions.reduce((acc, curr) => {
+      const cat = curr.category || "Others";
+      acc[cat] = (acc[cat] || 0) + parseFloat(curr.amount);
+      return acc;
+    }, {});
 
-  const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
-  const navigate = useNavigate();
+    // Convert to array and format for display
+    const colors = {
+      "Food": "bg-emerald-500",
+      "Rent": "bg-[#30302e]",
+      "Transport": "bg-blue-500",
+      "Entertainment": "bg-orange-400",
+      "Others": "bg-stone-400"
+    };
+
+    return Object.keys(grouped).map(cat => ({
+      label: cat,
+      amount: `$${grouped[cat].toFixed(0)}`,
+      percent: `${Math.round((grouped[cat] / total) * 100)}%`,
+      color: colors[cat] || "bg-stone-400",
+      rawPercent: (grouped[cat] / total) * 100 // for width
+    })).sort((a,b) => b.rawPercent - a.rawPercent); // Sort highest to lowest
+  };
+
+  const categoryData = getCategoryBreakdown();
+
+   if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#f8ecdd]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-[#5B2D2D]" size={48} />
+          <p className="text-[#5B2D2D] font-bold">Syncing your finances...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative">
@@ -80,7 +181,7 @@ function Dashboard() {
         <ExpenseInputForm onClose={() => setShowExpenseModal(false)} />
       )}
 
-      {showCamera && <CameraOverlay onClose={() => setShowCamera(false)} />}
+      {/* {showCamera && <CameraOverlay onClose={() => setShowCamera(false)} />} */}
 
       <div className="z-50">
         <Sidebar />
@@ -95,8 +196,7 @@ function Dashboard() {
                 Let's Start <br /> Strong!
               </h1>
               <p className="text-[#30302e] opacity-70">
-                Good Morning, Pallavi. You are on track to be debt-free by Dec
-                2026.
+                Hello, {userData?.name || "User"}. You are on track to be debt-free by {getDebtFreeDate()}.
               </p>
             </div>
 
@@ -116,6 +216,7 @@ function Dashboard() {
                 </div>
               </button>
 
+              {/* SCAN BILL */}
               <label className={quickActionStyle}>
                 <div className="w-16 h-16 flex items-center justify-center shrink-0 bg-orange-100 text-orange-800 rounded-[24px]">
                   <ScanLine />
@@ -143,8 +244,7 @@ function Dashboard() {
                     Monthly Budget
                   </h3>
                   <p className="text-sm text-stone-500">
-                    You've spent 45% of your goal
-                  </p>
+                    You've spent {Math.round((userData?.expenses / userData?.income) * 100) || 0}% of your income </p>
                 </div>
 
                 <div className="w-10 h-10 rounded-full bg-[#edffd9] flex items-center justify-center text-[#5B2D2D]">
@@ -154,12 +254,15 @@ function Dashboard() {
 
               <div className="w-full h-4 bg-stone-200 rounded-full overflow-hidden">
                 {/* Colored fill bar with width 45% */}
-                <div className="h-full w-[45%] bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)]"></div>
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-1000"
+                  style={{ width: `${Math.min((userData?.expenses / userData?.income) * 100, 100)}%` }}
+                ></div>
               </div>
 
               <div className="flex justify-between mt-2 text-sm font-bold text-stone-600">
-                <span>$2,340 spent</span>
-                <span>$5,000 limit</span>
+                <span>${userData?.expenses || 0} spent</span>
+                <span>${userData?.income || 0} limit</span>
               </div>
             </div>
           </div>
@@ -195,8 +298,7 @@ function Dashboard() {
                     groceries this week?"
                   </h2>
                   <p className="text-stone-400 text-sm">
-                    Tap to chat with your financial data. No judgement, just
-                    math.
+                    Tap to chat with your financial data. No judgement, just math.
                   </p>
                 </div>
 
@@ -220,7 +322,7 @@ function Dashboard() {
             <AlertTriangle className="text-orange-500" /> Attention Needed
           </h3>
 
-          <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex items-center justify-between">
+          {/* <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex items-center justify-between">
             <div className="flex gap-4 items-center">
               <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm">
                 <DollarSign size={24} />
@@ -237,7 +339,31 @@ function Dashboard() {
             <button className="px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors">
               Mark as Paid
             </button>
-          </div>
+          </div> */}
+
+          {urgentDebt ? (
+             <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex flex-col md:flex-row items-center justify-between gap-4">
+               <div className="flex gap-4 items-center">
+                 <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm">
+                   <DollarSign size={24} />
+                 </div>
+                 <div>
+                   {/* DYNAMIC URGENT DEBT INFO */}
+                   <h4 className="font-bold text-[#5B2D2D]">{urgentDebt.name} Payment</h4>
+                   <p className="text-sm text-stone-500">
+                     Estimated Min Pay: ${urgentDebt.estimatedMinPayment}. Stress Level: {urgentDebt.stress}/10.
+                   </p>
+                 </div>
+               </div>
+               <button className="px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors">
+                Mark as Paid
+               </button>
+             </div>
+           ) : (
+             <div className="p-6 bg-emerald-100 font-semibold border border-emerald-300 rounded-[24px] text-emerald-800">
+               No urgent debts found! Great job.
+             </div>
+           )}
         </div>
 
         <div>
@@ -280,6 +406,7 @@ function Dashboard() {
                   </div>
                 ))}
               </div>
+
               <div className="flex justify-between mt-2 text-xs text-stone-400 font-bold">
                 <span>Mon</span>
                 <span>Tue</span>
@@ -291,32 +418,38 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Chart 2: Expense Breakdown */}
-            <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100">
+            {/* Chart 2: Expense Breakdown */}  
+            <div className="bg-white p-6 rounded-[30px] min-h-[16rem] shadow-sm border border-stone-100">
               <h4 className="text-stone-500 font-bold text-sm mb-4">
                 Where your money went
               </h4>
               <div className="space-y-4">
-                <ExpenseItem
-                  label="Rent & Utilities"
-                  amount="$1,200"
-                  percent="40%"
-                  color="bg-[#30302e]"
-                />
-                <ExpenseItem
-                  label="Food & Dining"
-                  amount="$450"
-                  percent="25%"
-                  color="bg-emerald-500"
-                />
-                <ExpenseItem
-                  label="Entertainment"
-                  amount="$120"
-                  percent="10%"
-                  color="bg-orange-400"
-                />
+                 
+                 {/* Logic: If we have transactions, map them. If not, show empty state */}
+                 {categoryData.length > 0 ? (
+                    categoryData.map((item, index) => (
+                      <ExpenseItem 
+                        key={index}
+                        label={item.label} 
+                        amount={item.amount} 
+                        percent={item.percent}
+                        // Use the calculated percentage for the bar width
+                        widthVal={`${item.rawPercent}%`} 
+                        color={item.color} 
+                      />
+                    ))
+                 ) : (
+                    // Empty State / Fallback
+                    <div className="flex flex-col items-center justify-center h-40 text-stone-400 gap-2">
+                       <p className="text-sm italic">No detailed expenses added yet.</p>
+                       <p className="text-xs">Use "Add Expense" to see breakdown.</p>
+                    </div>
+                 )}
+
               </div>
             </div>
+
+
           </div>
         </div>
 
@@ -328,7 +461,7 @@ function Dashboard() {
 
 // --- HELPER COMPONENT FOR EXPENSE LIST ---
 // This makes the 'Where your money went' section code cleaner
-const ExpenseItem = ({ label, amount, percent, color }) => (
+const ExpenseItem = ({ label, amount, percent, widthVal, color }) => (
   <div className="flex items-center gap-4">
     <div className={`w-3 h-3 rounded-full ${color}`}></div>
     <div className="flex-1">
@@ -336,10 +469,9 @@ const ExpenseItem = ({ label, amount, percent, color }) => (
         <span>{label}</span>
         <span>{amount}</span>
       </div>
-      {/* Mini Progress Bar */}
       <div className="w-full h-1.5 bg-stone-100 rounded-full mt-1 overflow-hidden">
         <div
-          style={{ width: percent }}
+          style={{ width: widthVal || percent }} // Use widthVal if provided, else percent string
           className={`h-full ${color} rounded-full`}
         ></div>
       </div>

@@ -362,7 +362,7 @@ function Hero() {
 
       
      <div>
-       <Footer />
+       <Footer buttonText="Get Started Free" actionLink="\login" />
      </div>
     </div>
   );
