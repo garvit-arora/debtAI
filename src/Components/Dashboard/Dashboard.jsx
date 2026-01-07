@@ -339,9 +339,9 @@ function Dashboard() {
           <div className="flex flex-col gap-6 h-full">
             <div className="flex justify-end gap-3 flex-wrap md:flex-nowrap">
                 {!isPremium && (
-                    <button onClick={() => setShowPricingModal(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse duration-[2000ms] border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm">Upgrade PRO</span></button>
+                    <button onClick={() => setShowPricingModal(true)} className=" cursor-pointer flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse duration-[2000ms] border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm">Upgrade PRO</span></button>
                 )}
-                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="hidden md:inline">Profile</span></button>
+                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 cursor-pointer px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="hidden md:inline">Profile</span></button>
             </div>
 
             <div onClick={() => navigate('/debtai')} className="relative group cursor-pointer h-full min-h-[250px]">
