@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import send from "../../assets/images/send.svg";
-import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose } from "react-icons/md";
+// Added MdTranslate to imports
+import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose, MdTranslate } from "react-icons/md";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, push, onValue, serverTimestamp, remove } from "firebase/database";
 import { app } from "../../firebase";
@@ -41,12 +42,23 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   );
 };
 
+// --- UPDATED BOT MESSAGE COMPONENT ---
 const BotMessage = ({ text, shouldAnimate }) => {
   const [displayResponse, setDisplayResponse] = useState("");
   const [completed, setCompleted] = useState(false);
 
+  // Translation States
+  const [translatedText, setTranslatedText] = useState(null);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  // Azure Credentials from Environment Variables
+  const translatorKey = import.meta.env.VITE_AZURE_TRANSLATOR_KEY;
+  const translatorEndpoint = import.meta.env.VITE_AZURE_TRANSLATOR_ENDPOINT;
+  const speechRegion = import.meta.env.VITE_AZURE_REGION;
+
+  // Typing Effect Logic
   useEffect(() => {
-    // Safety check: If text is missing, force a fallback
     const safeText = text || "⚠️ (No response text)";
 
     if (!shouldAnimate) {
@@ -69,24 +81,84 @@ const BotMessage = ({ text, shouldAnimate }) => {
     return () => clearInterval(intervalId);
   }, [text, shouldAnimate]);
 
+  // Translation Handler
+  const handleTranslate = async () => {
+    // If we already have the translation, just toggle visibility
+    if (translatedText) {
+      setShowTranslation(!showTranslation);
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const response = await fetch(
+        `${translatorEndpoint}/translate?api-version=3.0&to=hi`, // Hardcoded 'hi' (Hindi) as requested
+        {
+          method: "POST",
+          headers: {
+            "Ocp-Apim-Subscription-Key": translatorKey,
+            "Ocp-Apim-Subscription-Region": speechRegion,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([{ Text: text }]),
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data && data[0] && data[0].translations && data[0].translations[0]) {
+        setTranslatedText(data[0].translations[0].text);
+        setShowTranslation(true);
+      } else {
+        console.error("Translation format unexpected:", data);
+      }
+    } catch (error) {
+      console.error("Translation Error:", error);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Determine what text to show
+  const textToShow = showTranslation && translatedText ? translatedText : (completed ? (text || "⚠️ (No response text)") : displayResponse);
+
   return (
-    <div className={`text-sm sm:text-base text-gray-900 ${completed ? "" : "typing-cursor"}`}>
-      <ReactMarkdown 
-        remarkPlugins={[remarkGfm]}
-        components={{
-          strong: ({node, ...props}) => <span className="font-bold text-purple-900" {...props} />,
-          ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2" {...props} />,
-          ol: ({node, ...props}) => <ol className="list-decimal ml-4 my-2" {...props} />,
-          li: ({node, ...props}) => <li className="mb-1" {...props} />,
-          h1: ({node, ...props}) => <h1 className="text-xl font-bold my-2" {...props} />,
-          h2: ({node, ...props}) => <h2 className="text-lg font-bold my-2" {...props} />,
-          h3: ({node, ...props}) => <h3 className="font-bold my-1" {...props} />,
-          code: ({node, ...props}) => <code className="bg-gray-200 rounded px-1 text-xs" {...props} />,
-          p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
-        }}
-      >
-        {completed ? (text || "⚠️ (No response text)") : displayResponse}
-      </ReactMarkdown>
+    <div className="flex flex-col">
+      <div className={`text-sm sm:text-base text-gray-900 ${completed ? "" : "typing-cursor"}`}>
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          components={{
+            strong: ({node, ...props}) => <span className="font-bold text-purple-900" {...props} />,
+            ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2" {...props} />,
+            ol: ({node, ...props}) => <ol className="list-decimal ml-4 my-2" {...props} />,
+            li: ({node, ...props}) => <li className="mb-1" {...props} />,
+            h1: ({node, ...props}) => <h1 className="text-xl font-bold my-2" {...props} />,
+            h2: ({node, ...props}) => <h2 className="text-lg font-bold my-2" {...props} />,
+            h3: ({node, ...props}) => <h3 className="font-bold my-1" {...props} />,
+            code: ({node, ...props}) => <code className="bg-gray-200 rounded px-1 text-xs" {...props} />,
+            p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
+          }}
+        >
+          {textToShow}
+        </ReactMarkdown>
+      </div>
+
+      {/* Translation Button - Only shows when typing is done */}
+      {completed && (
+        <div className="mt-2 flex justify-end border-t border-gray-200 pt-1">
+          <button
+            onClick={handleTranslate}
+            disabled={isTranslating}
+            className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
+            title="Translate to Hindi"
+          >
+            <MdTranslate size={14} />
+            <span>
+              {isTranslating ? "Translating..." : showTranslation ? "Show Original" : "Translate (Hindi)"}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -203,15 +275,7 @@ function DebtAI() {
   };
 
   const handleSend = async () => {
-    // 1. LOG START - Look for this in CHROME/EDGE CONSOLE (F12)
-    // console.log(">>> HANDLE SEND STARTING...");
-    
-    // Check if variables exist
-    // console.log("User:", user?.uid);
-    // console.log("Input:", input);
-
     if (!input.trim() || !user) {
-        // console.log(">>> Returning early: No input or user");
         return;
     }
 
@@ -220,8 +284,6 @@ function DebtAI() {
     setIsTyping(true);
 
     try {
-        // console.log(">>> Step 1: Handling Session...");
-        
         let activeSessionId = currentSessionId;
         if (!activeSessionId) {
             const newSessionRef = await push(ref(db, `users/${user.uid}/conversations`), {
@@ -232,24 +294,17 @@ function DebtAI() {
             setCurrentSessionId(activeSessionId);
         }
 
-        // console.log(">>> Step 2: Saving User Message to Firebase...");
-        
-        // Update UI immediately
         const tempUserMsg = { sender: "user", text: textToSend, shouldAnimate: false };
         setMessages(prev => [...prev, tempUserMsg]);
 
         const messagesRef = ref(db, `users/${user.uid}/conversations/${activeSessionId}/messages`);
         
-        // Note: If this line fails, your internet or Firebase rules are blocking writes
         await push(messagesRef, {
             sender: "user",
             text: textToSend,
             timestamp: serverTimestamp(),
             shouldAnimate: false
         });
-
-        // console.log(">>> Step 3: Fetching from Backend...");
-        // console.log("Target URL:", `${backendURL}/chat`); // Verify this is not undefined!
 
         const response = await fetch(`${backendURL}/chat`, {
             method: "POST",
@@ -260,15 +315,11 @@ function DebtAI() {
             }),
         });
 
-        // console.log(">>> Step 4: Response Status:", response.status);
-
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
         const data = await response.json();
-        // console.log(">>> Step 5: DATA RECEIVED:", data);
-
         const aiText = data.reply || "Error: No reply text received.";
 
         await push(messagesRef, {
@@ -278,8 +329,6 @@ function DebtAI() {
             isNew: true 
         });
         
-        // console.log(">>> Step 6: Finished!");
-
     } catch (error) {
         console.error(">>> CRITICAL ERROR IN HANDLESEND:", error);
         
@@ -292,6 +341,7 @@ function DebtAI() {
         setIsTyping(false);
     }
   };
+
   const displayMessages = messages.map((msg, index) => {
     const isRecent = (Date.now() - (msg.timestamp || Date.now())) < 10000;
     const shouldAnimate = msg.sender === 'bot' && isRecent && (index === messages.length - 1);
@@ -433,7 +483,7 @@ function DebtAI() {
               type="button"
               onClick={handleSend}
               disabled={!user || isTyping}
-              className="absolute right-3 bottom-3 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
+              className="absolute right-3 bottom-4 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
             >
               <img src={send} alt="Send" className="w-5 h-5 invert" /> 
             </button>

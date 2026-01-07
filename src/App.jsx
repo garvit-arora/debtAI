@@ -19,8 +19,10 @@ function App() {
     <>
     <AuthProvider>
     <Routes>
+            <Route path="/" element={<DebtAI />} />
+
       {/* <Route path="/" element={<Hero />} /> */}
-    <Route path="/" element={<WaitingPage />} />
+    {/* <Route path="/" element={<WaitingPage />} />
 
       <Route
         path="/dashboard"
@@ -70,7 +72,7 @@ function App() {
             <Login />
         }
       />
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={<NotFound />} /> */}
     </Routes>
     <InstallPrompt />
     
