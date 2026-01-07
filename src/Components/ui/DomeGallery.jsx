@@ -1,41 +1,49 @@
 import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useGesture } from '@use-gesture/react';
-import image1 from '../../assets/images/image1.png';
-import image2 from '../../assets/images/bg2.png';
-import image3 from '../../assets/icons/logo.jpeg';
-import image4 from '../../assets/icons/logo2.png';
-import image5 from '../../assets/images/bg2.png';
-import image6 from '../../assets/images/bg2.png';
-import image7 from '../../assets/images/image1.png';
+import image1 from '../../assets/images/person1.png';
+import image2 from '../../assets/images/person2.png';
+import image3 from '../../assets/images/person3.png';
+import image4 from '../../assets/images/person4.png';
+import image5 from '../../assets/images/person5.png';
+import image6 from '../../assets/images/person6.png';
+import image7 from '../../assets/images/person7.png';
 
+// 1. Data Structure with Quotes
 const DEFAULT_IMAGES = [
   {
     src: image1,
-    alt: 'Abstract art'
+    alt: 'Success Story 1',
+    quote: 'This website helped me liquidify my debt instantly.'
   },
   {
     src: image6,
-    alt: 'Modern sculpture'
+    alt: 'Success Story 2',
+    quote: 'I finally feel in control of my finances again.'
   },
   {
     src: image7,
-    alt: 'Digital artwork'
+    alt: 'Success Story 3',
+    quote: 'The best decision I made for my financial freedom.'
   },
   {
     src: image2,
-    alt: 'Contemporary art'
+    alt: 'Success Story 4',
+    quote: 'Simple, fast, and life-saving service for my loans.'
   },
   {
     src: image3,
-    alt: 'Geometric pattern'
+    alt: 'Success Story 5',
+    quote: 'Cleared my dues in record time. Highly recommend!'
   },
   {
     src: image4,
-    alt: 'Textured surface'
+    alt: 'Success Story 6',
+    quote: 'Turned my financial stress into peace of mind.'
   },
   {
     src: image5,
-    alt: 'Social media image'
+    alt: 'Success Story 7',
+    quote: 'Liquidating my assets to pay debt was never this easy.'
   }
 ];
 
@@ -58,6 +66,7 @@ const getDataNumber = (el, name, fallback) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+// 2. Builder function passing quotes correctly
 function buildItems(pool, seg) {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
   const evenYs = [-4, -2, 0, 2, 4];
@@ -70,23 +79,23 @@ function buildItems(pool, seg) {
 
   const totalSlots = coords.length;
   if (pool.length === 0) {
-    return coords.map(c => ({ ...c, src: '', alt: '' }));
-  }
-  if (pool.length > totalSlots) {
-    console.warn(
-      `[DomeGallery] Provided image count (${pool.length}) exceeds available tiles (${totalSlots}). Some images will not be shown.`
-    );
+    return coords.map(c => ({ ...c, src: '', alt: '', quote: '' }));
   }
 
   const normalizedImages = pool.map(image => {
     if (typeof image === 'string') {
-      return { src: image, alt: '' };
+      return { src: image, alt: '', quote: '' };
     }
-    return { src: image.src || '', alt: image.alt || '' };
+    return { 
+      src: image.src || '', 
+      alt: image.alt || '', 
+      quote: image.quote || '' 
+    };
   });
 
   const usedImages = Array.from({ length: totalSlots }, (_, i) => normalizedImages[i % normalizedImages.length]);
 
+  // Prevent adjacent duplicates
   for (let i = 1; i < usedImages.length; i++) {
     if (usedImages[i].src === usedImages[i - 1].src) {
       for (let j = i + 1; j < usedImages.length; j++) {
@@ -103,7 +112,8 @@ function buildItems(pool, seg) {
   return coords.map((c, i) => ({
     ...c,
     src: usedImages[i].src,
-    alt: usedImages[i].alt
+    alt: usedImages[i].alt,
+    quote: usedImages[i].quote
   }));
 }
 
@@ -602,8 +612,11 @@ export default function DomeGallery({
     overlay.style.overflow = 'hidden';
     overlay.style.boxShadow = '0 10px 30px rgba(0,0,0,.35)';
 
-    const rawSrc = parent.dataset.src || el.querySelector('img')?.src || '';
-    const rawAlt = parent.dataset.alt || el.querySelector('img')?.alt || '';
+    const rawSrc = parent.getAttribute('data-src') || el.querySelector('img')?.src || '';
+    const rawAlt = parent.getAttribute('data-alt') || el.querySelector('img')?.alt || '';
+    // Use getAttribute to ensure we read what was rendered
+    const quoteText = parent.getAttribute('data-quote') || '';
+
     const img = document.createElement('img');
     img.src = rawSrc;
     img.alt = rawAlt;
@@ -611,7 +624,40 @@ export default function DomeGallery({
     img.style.height = '100%';
     img.style.objectFit = 'cover';
     img.style.filter = grayscale ? 'grayscale(1)' : 'none';
+    img.style.zIndex = '1';
+    
     overlay.appendChild(img);
+
+    // 3. Add Quote to Overlay (Fix: Ensure styles make it visible)
+    if (quoteText) {
+      const quoteEl = document.createElement('div');
+      quoteEl.innerText = `"${quoteText}"`;
+      quoteEl.style.cssText = `
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 30px 20px 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.6) 60%, transparent);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 500;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.4s ease 0.2s;
+        pointer-events: none;
+        z-index: 10;
+        font-family: inherit;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      `;
+      overlay.appendChild(quoteEl);
+
+      // Fade in quote after image opens
+      setTimeout(() => {
+        if (quoteEl) quoteEl.style.opacity = '1';
+      }, enlargeTransitionMs);
+    }
+
     viewerRef.current.appendChild(overlay);
 
     const tx0 = tileR.left - frameR.left;
@@ -720,8 +766,8 @@ export default function DomeGallery({
       backface-visibility: hidden;
       transition: transform 300ms;
       transform: rotateY(calc(var(--rot-y) * (var(--offset-x) + ((var(--item-size-x) - 1) / 2)) + var(--rot-y-delta, 0deg))) 
-                 rotateX(calc(var(--rot-x) * (var(--offset-y) - ((var(--item-size-y) - 1) / 2)) + var(--rot-x-delta, 0deg))) 
-                 translateZ(var(--radius));
+                rotateX(calc(var(--rot-x) * (var(--offset-y) - ((var(--item-size-y) - 1) / 2)) + var(--rot-x-delta, 0deg))) 
+                translateZ(var(--radius));
     }
     
     .sphere-root[data-enlarging="true"] .scrim {
@@ -736,16 +782,6 @@ export default function DomeGallery({
       }
     }
     
-    // body.dg-scroll-lock {
-    //   position: fixed !important;
-    //   top: 0;
-    //   left: 0;
-    //   width: 100% !important;
-    //   height: 100% !important;
-    //   overflow: hidden !important;
-    //   touch-action: none !important;
-    //   overscroll-behavior: contain !important;
-    // }
     .item__image {
       position: absolute;
       inset: 10px;
@@ -797,6 +833,7 @@ export default function DomeGallery({
                   className="sphere-item absolute m-auto"
                   data-src={it.src}
                   data-alt={it.alt}
+                  data-quote={it.quote || ''} // Ensure quote is passed
                   data-offset-x={it.x}
                   data-offset-y={it.y}
                   data-size-x={it.sizeX}

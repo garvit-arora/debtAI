@@ -17,6 +17,7 @@ import CalendarPage from './Components/Calendar/Calendar';
 import Profile from './Components/Profile/Profile';
 import Blogs from './Components/Blogs/Blogs';
 import PremiumModal from "../src/Components/Premium/Premium"
+import Legal from './Components/Legal/Legal';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
     <AuthProvider>
     <Routes>
       <Route path="/" element={<Hero />} />
+      <Route path="/legal" element={<Legal />} />
     {/* <Route path="/" element={<WaitingPage />} /> */}
 
       <Route

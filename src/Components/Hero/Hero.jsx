@@ -8,8 +8,8 @@ import {
 import logo from "../../assets/icons/logo.jpeg";
 import background from "../../assets/images/image1.png";
 import background2 from "../../assets/images/bg2.png";
-import founder1 from "../../assets/images/Founder1.jpg";
-import founder2 from "../../assets/images/Founder2.jpg";
+import founder1 from "../../assets/images/Founder1.jpeg";
+import founder2 from "../../assets/images/Founder2.jpeg";
 import { useEffect, useRef } from "react";
 import DomeGallery from "../ui/DomeGallery";
 import Footer from "../ui/Footer";
@@ -315,7 +315,7 @@ function Hero() {
         </div>
       </section>
 
-      <section id="founders" className="pb-22 bg-(--teal)">
+      <section id="team" className="pb-22 bg-(--teal)">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 section-heading">
             <h2 className="text-5xl font-bold text-(--brown)">
