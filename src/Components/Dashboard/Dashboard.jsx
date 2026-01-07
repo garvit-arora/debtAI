@@ -1,103 +1,152 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Footer from "../ui/Footer";
 import Sidebar from "../ui/Sidebar";
 import ExpenseInputForm from "../ui/ExpenseInputForm";
 import CameraOverlay from "../ui/CameraOverlay";
 import { useNavigate } from "react-router-dom";
-
-import { 
-  Plus, 
-  ScanLine, 
-  ArrowUpRight, 
-  MessageSquare, 
-  AlertTriangle, 
-  TrendingUp, 
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  Plus,
+  ScanLine,
+  ArrowUpRight,
+  MessageSquare,
+  AlertTriangle,
+  TrendingUp,
   DollarSign,
   User,
-  Camera,      
+  Camera,
   Calendar,
-  Tag
+  Tag,
 } from "lucide-react";
+import { getAuth } from "firebase/auth";
+import { app } from "../../firebase"; // wherever you initialized Firebase
 
-const quickActionStyle = "relative h-16 w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
+const quickActionStyle =
+  "relative h-16 w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
 
 function Dashboard() {
+  const [user, setUser] = useState(null);
+  const auth = getAuth(app);
+  // user = auth.currentUser;
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      if (u) setUser(u);
+      else alert("You are not logged in!");
+    });
+    return () => unsubscribe();
+  }, []);
+  // const [selectedFile, setSelectedFile] = useState(null);
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // When user picks a file
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) handleUpload(file);
+  };
+
+  // Upload function
+  const handleUpload = async (file) => {
+  if (!file) return;
+
+  if (!user) {
+    alert("User still loading. Try again in a second.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("userId", user.uid);
+
+  const res = await fetch("http://localhost:5000/upload-pdf", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  console.log("Uploaded:", data);
+};
+
 
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const navigate = useNavigate();
 
   return (
-    
-    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative">    
-     
+    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative">
       {showExpenseModal && (
         // Pass a prop to close the modal from inside the form if needed
         <ExpenseInputForm onClose={() => setShowExpenseModal(false)} />
       )}
 
-      {showCamera && (
-        <CameraOverlay onClose={() => setShowCamera(false)} />
-      )}
-
+      {showCamera && <CameraOverlay onClose={() => setShowCamera(false)} />}
 
       <div className="z-50">
         <Sidebar />
       </div>
-    
-      <main className="flex-1 ml-0 md:ml-28 p-6 md:p-12 overflow-y-auto">             
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">                   
+
+      <main className="flex-1 ml-0 md:ml-28 p-6 md:p-12 overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <div className="lg:col-span-2 flex flex-col gap-8">
-            
             {/* HEADING */}
             <div>
               <h1 className="text-4xl md:text-6xl font-bold text-[#5B2D2D] mb-2">
                 Let's Start <br /> Strong!
               </h1>
               <p className="text-[#30302e] opacity-70">
-                Good Morning, Pallavi. You are on track to be debt-free by Dec 2026.
+                Good Morning, Pallavi. You are on track to be debt-free by Dec
+                2026.
               </p>
             </div>
 
             {/* buttons */}
             <div className="flex gap-4 flex-wrap">
-          
-                <button
-                  onClick={() =>  setShowExpenseModal(true) }
-                  className= {quickActionStyle}>
+              <button
+                onClick={() => setShowExpenseModal(true)}
+                className={quickActionStyle}
+              >
+                <div
+                  className={`w-16 h-16 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-800 rounded-[24px]`}
+                >
+                  {<Plus />}
+                </div>
+                <div className="whitespace-nowrap  ml-2">
+                  <span>Add Expense</span>
+                </div>
+              </button>
 
-                  <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-800 rounded-[24px]`}>
-                    { <Plus />}
-                  </div>                
-                  <div className="whitespace-nowrap  ml-2">
-                    <span>Add Expense</span>
-                  </div>                
-                </button>
+              <label className={quickActionStyle}>
+                <div className="w-16 h-16 flex items-center justify-center shrink-0 bg-orange-100 text-orange-800 rounded-[24px]">
+                  <ScanLine />
+                </div>
+                <div className="whitespace-nowrap ml-2">
+                  <span>Scan Bill</span>
+                </div>
 
-
-
-                <button
-                  onClick={() => setShowCamera(true)}
-                  className= {quickActionStyle}>
-
-                  <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-orange-100 text-orange-800 rounded-[24px]`}>
-                    <ScanLine />
-                  </div>                
-                  <div className="whitespace-nowrap  ml-2 ">
-                    <span>Scan Bill</span>
-                  </div>                
-                </button>
-              
+                {/* Invisible file input over the button */}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  disabled={!user}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleFileChange}
+                />
+              </label>
             </div>
 
-            {/* PROGRESS BAR */}           
+            {/* PROGRESS BAR */}
             <div className="bg-white/60 backdrop-blur-sm p-8 rounded-[30px] shadow-sm border border-white/40">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-[#5B2D2D]">Monthly Budget</h3>
-                  <p className="text-sm text-stone-500">You've spent 45% of your goal</p>
+                  <h3 className="text-xl font-bold text-[#5B2D2D]">
+                    Monthly Budget
+                  </h3>
+                  <p className="text-sm text-stone-500">
+                    You've spent 45% of your goal
+                  </p>
                 </div>
-               
+
                 <div className="w-10 h-10 rounded-full bg-[#edffd9] flex items-center justify-center text-[#5B2D2D]">
                   <TrendingUp size={20} />
                 </div>
@@ -107,26 +156,21 @@ function Dashboard() {
                 {/* Colored fill bar with width 45% */}
                 <div className="h-full w-[45%] bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)]"></div>
               </div>
-              
+
               <div className="flex justify-between mt-2 text-sm font-bold text-stone-600">
                 <span>$2,340 spent</span>
                 <span>$5,000 limit</span>
               </div>
             </div>
-
-          
           </div>
 
-
-          {/* right side */}      
+          {/* right side */}
           <div className="flex flex-col gap-6 h-full">
-            
             <div className="flex justify-end">
-              <button 
-                onClick={() => navigate('/profile')} 
+              <button
+                onClick={() => navigate("/profile")}
                 className="flex items-center gap-3 px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all hover:scale-105 active:scale-95 border border-white/40"
               >
-                
                 <div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]">
                   <User size={18} strokeWidth={2.5} />
                 </div>
@@ -136,109 +180,147 @@ function Dashboard() {
 
             <div className="relative group cursor-pointer h-full min-h-[300px]">
               <div className="absolute inset-0 bg-gradient-to-br from-[#30302e] to-[#141414] rounded-[35px] p-8 flex flex-col justify-between shadow-xl transition-transform duration-500 group-hover:scale-[1.02]">
-                          
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-[#f8ecdd] text-sm font-medium tracking-widest uppercase">DebtAI Assistant</span>
-              </div>
-
-              {/* Center */}
-              <div className="space-y-4">
-                <h2 className="text-3xl text-white font-light">
-                  "How can I save <span className="text-emerald-400 font-bold">$200</span> on groceries this week?"
-                </h2>
-                <p className="text-stone-400 text-sm">
-                  Tap to chat with your financial data. No judgement, just math.
-                </p>
-              </div>
-
-              {/* fake input */}
-              <div className="w-full h-12 bg-white/10 rounded-full flex items-center px-4 backdrop-blur-md border border-white/5">
-                <span className="text-stone-400 text-sm">Ask anything...</span>
-                <div className="ml-auto w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black">
-                   <ArrowUpRight size={16} />
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <span className="text-[#f8ecdd] text-sm font-medium tracking-widest uppercase">
+                    DebtAI Assistant
+                  </span>
                 </div>
-              </div>
+
+                {/* Center */}
+                <div className="space-y-4">
+                  <h2 className="text-3xl text-white font-light">
+                    "How can I save{" "}
+                    <span className="text-emerald-400 font-bold">$200</span> on
+                    groceries this week?"
+                  </h2>
+                  <p className="text-stone-400 text-sm">
+                    Tap to chat with your financial data. No judgement, just
+                    math.
+                  </p>
+                </div>
+
+                {/* fake input */}
+                <div className="w-full h-12 bg-white/10 rounded-full flex items-center px-4 backdrop-blur-md border border-white/5">
+                  <span className="text-stone-400 text-sm">
+                    Ask anything...
+                  </span>
+                  <div className="ml-auto w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black">
+                    <ArrowUpRight size={16} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
         </div>
-        
-
 
         {/* ALERT  */}
         <div className="mb-12">
-           <h3 className="text-xl font-bold text-[#5B2D2D] mb-6 flex items-center gap-2">
-             <AlertTriangle className="text-orange-500" /> Attention Needed
-           </h3>
-           
-           <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex items-center justify-between">
-             <div className="flex gap-4 items-center">
-               <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm">
-                 <DollarSign size={24} />
-               </div>
-               <div>
-                 <h4 className="font-bold text-[#5B2D2D]">Credit Card Payment Due</h4>
-                 <p className="text-sm text-stone-500">Minimum $120 due in 2 days. Avoid interest by paying now.</p>
-               </div>
-             </div>
-             <button className="px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors">
+          <h3 className="text-xl font-bold text-[#5B2D2D] mb-6 flex items-center gap-2">
+            <AlertTriangle className="text-orange-500" /> Attention Needed
+          </h3>
+
+          <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex items-center justify-between">
+            <div className="flex gap-4 items-center">
+              <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm">
+                <DollarSign size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-[#5B2D2D]">
+                  Credit Card Payment Due
+                </h4>
+                <p className="text-sm text-stone-500">
+                  Minimum $120 due in 2 days. Avoid interest by paying now.
+                </p>
+              </div>
+            </div>
+            <button className="px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors">
               Mark as Paid
-             </button>
-           </div>
+            </button>
+          </div>
         </div>
 
-
-       
         <div>
           <div className="flex justify-between items-end mb-6">
-            <h3 className="text-xl font-bold text-[#5B2D2D]">Analytics Overview</h3>
-            
-           
+            <h3 className="text-xl font-bold text-[#5B2D2D]">
+              Analytics Overview
+            </h3>
+
             <div className="bg-white p-1 rounded-full flex gap-1 shadow-sm">
-              <button className="px-4 py-1.5 rounded-full bg-[#30302e] text-[#f8ecdd] text-xs font-bold shadow-sm">Weekly</button>
-              <button className="px-4 py-1.5 rounded-full text-stone-500 hover:bg-stone-100 text-xs font-bold transition-colors">Monthly</button>
-              <button className="px-4 py-1.5 rounded-full text-stone-500 hover:bg-stone-100 text-xs font-bold transition-colors">Yearly</button>
+              <button className="px-4 py-1.5 rounded-full bg-[#30302e] text-[#f8ecdd] text-xs font-bold shadow-sm">
+                Weekly
+              </button>
+              <button className="px-4 py-1.5 rounded-full text-stone-500 hover:bg-stone-100 text-xs font-bold transition-colors">
+                Monthly
+              </button>
+              <button className="px-4 py-1.5 rounded-full text-stone-500 hover:bg-stone-100 text-xs font-bold transition-colors">
+                Yearly
+              </button>
             </div>
           </div>
 
-         
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             {/* Chart 1 */}
             <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col">
-               <h4 className="text-stone-500 font-bold text-sm mb-4">Spending Trend</h4>
-               {/* Visual Placeholder for a Graph (Bars) */}
-               <div className="flex-1 flex items-end justify-between gap-2 px-2">
-                  {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
-                    <div key={i} className="w-full bg-emerald-100 rounded-t-lg relative group">
-                      {/* The Fill */}
-                      <div style={{ height: `${h}%` }} className="absolute bottom-0 w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500"></div>
-                    </div>
-                  ))}
-               </div>
-               <div className="flex justify-between mt-2 text-xs text-stone-400 font-bold">
-                 <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-               </div>
+              <h4 className="text-stone-500 font-bold text-sm mb-4">
+                Spending Trend
+              </h4>
+              {/* Visual Placeholder for a Graph (Bars) */}
+              <div className="flex-1 flex items-end justify-between gap-2 px-2">
+                {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
+                  <div
+                    key={i}
+                    className="w-full bg-emerald-100 rounded-t-lg relative group"
+                  >
+                    {/* The Fill */}
+                    <div
+                      style={{ height: `${h}%` }}
+                      className="absolute bottom-0 w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500"
+                    ></div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2 text-xs text-stone-400 font-bold">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+              </div>
             </div>
 
             {/* Chart 2: Expense Breakdown */}
             <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100">
-               <h4 className="text-stone-500 font-bold text-sm mb-4">Where your money went</h4>
-               <div className="space-y-4">
-                 <ExpenseItem label="Rent & Utilities" amount="$1,200" percent="40%" color="bg-[#30302e]" />
-                 <ExpenseItem label="Food & Dining" amount="$450" percent="25%" color="bg-emerald-500" />
-                 <ExpenseItem label="Entertainment" amount="$120" percent="10%" color="bg-orange-400" />
-               </div>
+              <h4 className="text-stone-500 font-bold text-sm mb-4">
+                Where your money went
+              </h4>
+              <div className="space-y-4">
+                <ExpenseItem
+                  label="Rent & Utilities"
+                  amount="$1,200"
+                  percent="40%"
+                  color="bg-[#30302e]"
+                />
+                <ExpenseItem
+                  label="Food & Dining"
+                  amount="$450"
+                  percent="25%"
+                  color="bg-emerald-500"
+                />
+                <ExpenseItem
+                  label="Entertainment"
+                  amount="$120"
+                  percent="10%"
+                  color="bg-orange-400"
+                />
+              </div>
             </div>
-
           </div>
         </div>
 
-        < Footer />
-        
-
+        <Footer />
       </main>
     </div>
   );
@@ -256,7 +338,10 @@ const ExpenseItem = ({ label, amount, percent, color }) => (
       </div>
       {/* Mini Progress Bar */}
       <div className="w-full h-1.5 bg-stone-100 rounded-full mt-1 overflow-hidden">
-        <div style={{ width: percent }} className={`h-full ${color} rounded-full`}></div>
+        <div
+          style={{ width: percent }}
+          className={`h-full ${color} rounded-full`}
+        ></div>
       </div>
     </div>
   </div>
