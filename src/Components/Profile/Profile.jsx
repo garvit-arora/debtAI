@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../ui/Sidebar"; 
+import PricingModal from "../Premium/Premium";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser } from "firebase/auth";
 import { getDatabase, ref, onValue, update, remove } from "firebase/database";
@@ -22,7 +23,10 @@ import {
   Lock,
   Download,
   AlertOctagon,
-  Mail
+  Mail,
+  Crown,
+  Zap,
+  Star
 } from "lucide-react";
 
 const strategies = [
@@ -40,11 +44,19 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Independent Saving States for UX
+  // Independent Saving States
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   
-  // Form State
+  // UI States
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showDebtModal, setShowDebtModal] = useState(false);
+  const [editingDebtIndex, setEditingDebtIndex] = useState(null);
+  
+  // Data State
+  const [isPremium, setIsPremium] = useState(false);
+  const [planDetails, setPlanDetails] = useState("Free");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -58,8 +70,6 @@ export default function Profile() {
     }
   });
 
-  const [showDebtModal, setShowDebtModal] = useState(false);
-  const [editingDebtIndex, setEditingDebtIndex] = useState(null);
   const [currentDebt, setCurrentDebt] = useState({
     name: "", amount: "", interest: "", dueDate: "", stress: 5
   });
@@ -79,6 +89,10 @@ export default function Profile() {
                 safeDebts = Array.isArray(data.debts) ? data.debts : Object.values(data.debts);
             }
 
+            // Set Premium Status
+            setIsPremium(data.isPremium === true);
+            setPlanDetails(data.plan || (data.isPremium ? "Pro" : "Basic"));
+
             setFormData({
               name: data.name || "",
               email: data.email || currentUser.email,
@@ -92,7 +106,7 @@ export default function Profile() {
           setLoading(false);
         });
       } else {
-        navigate("/login"); // Redirect if not logged in
+        navigate("/login");
       }
     });
     return () => unsubscribe();
@@ -109,7 +123,6 @@ export default function Profile() {
     }
   };
 
-  // SAVE 1: Personal Info & Strategy
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
@@ -119,7 +132,6 @@ export default function Profile() {
         expenses: parseFloat(formData.expenses),
         strategy: formData.strategy
       });
-      // Optional toast here
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("Failed to update profile.");
@@ -128,14 +140,12 @@ export default function Profile() {
     }
   };
 
-  // SAVE 2: Settings & Preferences
   const handleSaveSettings = async () => {
     setSavingSettings(true);
     try {
       await update(ref(db, `users/${user.uid}`), {
         settings: formData.settings
       });
-      // Optional toast here
     } catch (error) {
       console.error("Error updating settings:", error);
       alert("Failed to update settings.");
@@ -259,6 +269,8 @@ export default function Profile() {
         <Sidebar />
       </div>
 
+      {showPricingModal && <PricingModal onClose={() => setShowPricingModal(false)} />}
+
       <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-8 pb-12">
           
@@ -266,7 +278,7 @@ export default function Profile() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold text-[#5B2D2D]">My Profile</h1>
-              <p className="text-[#5B2D2D]/70">Manage your data and strategies.</p>
+              <p className="text-[#5B2D2D]/70">Manage your data and subscription.</p>
             </div>
             <button 
               onClick={handleLogout}
@@ -275,6 +287,46 @@ export default function Profile() {
               <LogOut size={18} />
               <span className="hidden sm:inline">Logout</span>
             </button>
+          </div>
+
+          {/* --- NEW: SUBSCRIPTION CARD --- */}
+          <div className={`p-6 rounded-[30px] border shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 transition-all relative overflow-hidden ${isPremium ? "bg-gradient-to-r from-gray-900 to-gray-800 text-white border-gray-700" : "bg-white border-stone-100"}`}>
+             
+             {/* Decor */}
+             {isPremium && (
+                 <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                     <Crown size={150} />
+                 </div>
+             )}
+
+             <div className="flex items-center gap-4 z-10">
+                 <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-md ${isPremium ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-black" : "bg-stone-100 text-stone-400"}`}>
+                     {isPremium ? <Crown size={32} fill="black" /> : <User size={32} />}
+                 </div>
+                 <div>
+                     <h2 className="text-2xl font-bold">{isPremium ? "Pro Member" : "Basic Plan"}</h2>
+                     <p className={`text-sm ${isPremium ? "text-white/60" : "text-stone-500"}`}>
+                        {isPremium ? "You have unlocked all features." : "Upgrade to unlock AI Habits & more."}
+                     </p>
+                 </div>
+             </div>
+
+             <div className="z-10 w-full md:w-auto">
+                 {!isPremium ? (
+                     <button 
+                        onClick={() => setShowPricingModal(true)}
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.5)] hover:shadow-[0_0_25px_rgba(250,204,21,0.7)] hover:scale-105 transition-all animate-pulse"
+                     >
+                        <Zap size={20} fill="currentColor" />
+                        <span>Upgrade Now</span>
+                     </button>
+                 ) : (
+                     <div className="flex items-center gap-2 px-6 py-2 bg-white/10 rounded-full border border-white/20">
+                        <CheckCircle2 size={16} className="text-emerald-400" />
+                        <span className="text-sm font-bold text-emerald-100">Active</span>
+                     </div>
+                 )}
+             </div>
           </div>
 
           {/* GROUP 1: PERSONAL & FINANCIAL PROFILE */}
