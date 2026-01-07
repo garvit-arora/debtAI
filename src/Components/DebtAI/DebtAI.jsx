@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import send from "../../assets/images/send.svg";
 import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason } from "microsoft-cognitiveservices-speech-sdk";
-import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose, MdTranslate, MdMic, MdStop } from "react-icons/md";
+import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose, MdTranslate, MdMic, MdStop, MdStar, MdDiamond } from "react-icons/md"; 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getDatabase, ref, push, onValue, serverTimestamp, remove } from "firebase/database";
+import { getDatabase, ref, push, onValue, serverTimestamp, remove, update } from "firebase/database";
 import { app } from "../../firebase";
 
-// ... (ConfirmationModal and BotMessage components remain exactly the same as you provided)
+// ... (ConfirmationModal and BotMessage components remain exactly the same)
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
   return (
@@ -123,7 +123,7 @@ const BotMessage = ({ text, shouldAnimate }) => {
 
 function DebtAI() {
   const navigate = useNavigate();
-  const location = useLocation(); // 1. USE LOCATION TO GET DATA
+  const location = useLocation(); 
   const auth = getAuth(app);
   const db = getDatabase(app);
   const messagesEndRef = useRef(null);
@@ -143,16 +143,17 @@ function DebtAI() {
   const [chatToDelete, setChatToDelete] = useState(null);
   const [isListening, setIsListening] = useState(false);
 
-  // 2. AUTO-SEND LOGIC WHEN COMING FROM BLOGS
+  // Constants for Limit
+  const FREE_LIMIT = 15;
+  const usageCount = userData?.usageCount || 0;
+  const remainingPrompts = Math.max(0, FREE_LIMIT - usageCount);
+  const isPremium = userData?.isPremium === true;
+
+  // Auto-send logic
   useEffect(() => {
-    // Only trigger if we have a user, we haven't typed yet, and there is a prompt in state
     if (user && location.state?.autoPrompt && !isTyping) {
         const prompt = location.state.autoPrompt;
-        
-        // Clear the state so it doesn't resend if they refresh
         window.history.replaceState({}, document.title);
-        
-        // Call handleSend directly with the prompt
         handleSend(prompt);
     }
   }, [user, location.state]);
@@ -272,18 +273,28 @@ function DebtAI() {
     setChatToDelete(null);
   };
 
-  // 3. MODIFIED HANDLE SEND TO ACCEPT OPTIONAL TEXT
   const handleSend = async (manualText = null) => {
-    // If manualText is provided, use it. Otherwise use state 'input'
     const textToSend = manualText || input;
 
     if (!textToSend.trim() || !user) return;
 
-    setInput(""); // Clear input box
+    // 1. CHECK LIMIT
+    if (!isPremium && usageCount >= FREE_LIMIT) {
+        alert(`Limit Reached!\n\nYou have used ${FREE_LIMIT}/${FREE_LIMIT} free prompts. Please upgrade to Premium to continue.`);
+        return;
+    }
+
+    setInput("");
     setIsTyping(true);
 
     try {
         let activeSessionId = currentSessionId;
+        
+        // 2. INCREMENT COUNTER
+        await update(ref(db, `users/${user.uid}`), {
+            usageCount: usageCount + 1
+        });
+
         if (!activeSessionId) {
             const newSessionRef = await push(ref(db, `users/${user.uid}/conversations`), {
                 createdAt: serverTimestamp(),
@@ -369,6 +380,23 @@ function DebtAI() {
                 </button>
             </div>
         </div>
+        
+        {/* SIDEBAR USAGE INDICATOR */}
+        {user && userData && !isPremium && (
+            <div className="mx-4 mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="flex justify-between items-center text-xs text-gray-400 mb-1">
+                    <span>Free Plan</span>
+                    <span>{usageCount}/{FREE_LIMIT}</span>
+                </div>
+                <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                        className={`h-full ${ usageCount >= FREE_LIMIT ? 'bg-red-500' : 'bg-amber-500'}`} 
+                        style={{ width: `${Math.min((usageCount / FREE_LIMIT) * 100, 100)}%` }}
+                    ></div>
+                </div>
+            </div>
+        )}
+
         <div className="p-4">
             <button onClick={createNewChat} className="flex items-center gap-2 w-full bg-amber-700 hover:bg-amber-600 text-white p-3 rounded-lg transition-colors">
                 <MdAdd size={20} />
@@ -402,7 +430,7 @@ function DebtAI() {
              </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 pb-32 flex flex-col gap-4 pt-16 md:pt-4">
+        <div className="flex-1 overflow-y-auto p-4 pb-44 flex flex-col gap-4 pt-16 md:pt-4">
           {displayMessages.map((msg, index) => {
             const isBot = msg.sender === "bot";
             return (
@@ -423,29 +451,49 @@ function DebtAI() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* INPUT AREA */}
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-tr from-[#e3daf7] via-[#e3d9f2] to-[#f9e0fa] py-4 flex justify-center z-10 border-t border-purple-100">
-          <div className="relative w-[95%] sm:w-[90%] sm:max-w-3xl">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              rows={1}
-              placeholder={isListening ? "Listening..." : (user ? "Ask about your debt..." : "Please login")}
-              disabled={!user || isTyping || isListening}
-              className={`w-full resize-none rounded-3xl p-4 pr-24 border bg-white/70 focus:bg-white focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-500 transition-all shadow-sm max-h-32 ${isListening ? "border-red-400 ring-2 ring-red-100" : "border-purple-200 focus:ring-purple-400"}`}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
-            <div className="absolute right-3 bottom-4 flex gap-2">
-                <button type="button" onClick={handleSpeechToText} disabled={!user || isTyping} className={`p-2 rounded-full transition-all ${isListening ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-gray-200 hover:bg-gray-300"}`} title="Speak to type">
-                    {isListening ? <MdStop size={20} className="text-white" /> : <MdMic size={20} className="text-gray-700" />}
-                </button>
-                <button type="button" onClick={() => handleSend()} disabled={!user || isTyping || isListening} className="p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400">
-                <img src={send} alt="Send" className="w-5 h-5 invert" /> 
-                </button>
+          <div className="relative w-[95%] sm:w-[90%] sm:max-w-3xl flex flex-col gap-2">
+            
+            {/* NEW: PROMPT COUNT AND PREMIUM CTA */}
+            {user && !isPremium && (
+                <div className="flex justify-between items-center px-4 py-2 bg-white/60 backdrop-blur-md rounded-2xl border border-purple-100 shadow-sm text-xs sm:text-sm mx-1">
+                    <span className={`font-medium ${remainingPrompts === 0 ? "text-red-600" : "text-gray-700"}`}>
+                        {remainingPrompts} / {FREE_LIMIT} prompts remaining
+                    </span>
+                    <button 
+                        onClick={() => navigate('/premium')} 
+                        className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white pl-2 pr-3 py-1.5 rounded-full font-bold shadow-sm hover:shadow-md transition-all hover:scale-105"
+                    >
+                        <MdDiamond size={16} />
+                        Get Premium
+                    </button>
+                </div>
+            )}
+
+            <div className="relative w-full">
+                <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                rows={1}
+                placeholder={isListening ? "Listening..." : (user ? (remainingPrompts > 0 || isPremium ? "Ask about your debt..." : "Limit reached. Upgrade to continue.") : "Please login")}
+                disabled={!user || isTyping || isListening || (!isPremium && remainingPrompts === 0)}
+                className={`w-full resize-none rounded-3xl p-4 pr-24 border bg-white/70 focus:bg-white focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-500 transition-all shadow-sm max-h-32 ${isListening ? "border-red-400 ring-2 ring-red-100" : "border-purple-200 focus:ring-purple-400"} ${(!isPremium && remainingPrompts === 0) ? "opacity-60 cursor-not-allowed" : ""}`}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                    }
+                }}
+                />
+                <div className="absolute right-3 bottom-4 flex gap-2">
+                    <button type="button" onClick={handleSpeechToText} disabled={!user || isTyping} className={`p-2 rounded-full transition-all ${isListening ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-gray-200 hover:bg-gray-300"}`} title="Speak to type">
+                        {isListening ? <MdStop size={20} className="text-white" /> : <MdMic size={20} className="text-gray-700" />}
+                    </button>
+                    <button type="button" onClick={() => handleSend()} disabled={!user || isTyping || isListening} className="p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400">
+                    <img src={send} alt="Send" className="w-5 h-5 invert" /> 
+                    </button>
+                </div>
             </div>
           </div>
         </div>
