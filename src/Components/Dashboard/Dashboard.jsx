@@ -31,7 +31,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-
+  const [chart2Range, setChart2Range] = useState("Monthly");
 
   const navigate = useNavigate();
   const auth = getAuth(app);
@@ -91,6 +91,62 @@ function Dashboard() {
 
   const urgentDebt = getUrgentDebt();
 
+  // CHART 1 LOGIC (Last 7 Days Trend)
+  const getWeeklyTrend = () => {
+    if (!userData || !userData.transactions) return Array(7).fill({ day: "", amount: 0, percent: 0 });
+
+    const transactions = Object.values(userData.transactions);
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const last7Days = [];
+
+    // 1. Generate last 7 days array (dates and labels)
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dayLabel = days[d.getDay()];
+        last7Days.push({ date: dateString, day: dayLabel, amount: 0 });
+    }
+
+    transactions.forEach(t => {
+        const tDate = t.date; // Assuming transaction date is stored as YYYY-MM-DD
+        const dayEntry = last7Days.find(d => d.date === tDate);
+        if (dayEntry) {
+            dayEntry.amount += parseFloat(t.amount);
+        }
+    });
+
+    // 3. Find max spend to calculate bar height percentages
+    const maxSpend = Math.max(...last7Days.map(d => d.amount));
+    
+    // 4. Add percentage property
+    return last7Days.map(d => ({
+        ...d,
+        percent: maxSpend > 0 ? (d.amount / maxSpend) * 100 : 0
+    }));
+  };
+
+  const trendData = getWeeklyTrend();
+
+  // CHART 2 FILTERING LOGIC
+  const filterTransactions = (transactions) => {
+    if (!transactions) return [];
+    
+    const now = new Date();
+    const transactionList = Object.values(transactions);
+
+    return transactionList.filter(t => {
+      const tDate = new Date(t.date);
+      const diffTime = Math.abs(now - tDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (chart2Range === "Weekly") return diffDays <= 7;
+      if (chart2Range === "Monthly") return diffDays <= 30;
+      if (chart2Range === "Yearly") return diffDays <= 365;
+      return true;
+    });
+  };
+
   const [selectedFile, setSelectedFile] = useState(null);
 
   // When user picks a file
@@ -130,14 +186,18 @@ function Dashboard() {
    
   //Process transactions to get category percentages
   const getCategoryBreakdown = () => {
-    // If no transactions exist, return empty
     if (!userData || !userData.transactions) return [];
 
-    const transactions = Object.values(userData.transactions);
-    const total = transactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    // Apply the filter first
+    const filteredTransactions = filterTransactions(userData.transactions);
+    
+    // If no transactions match the filter (e.g., no expenses this week), return empty
+    if (filteredTransactions.length === 0) return [];
+
+    const total = filteredTransactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     
     // Group by category
-    const grouped = transactions.reduce((acc, curr) => {
+    const grouped = filteredTransactions.reduce((acc, curr) => {
       const cat = curr.category || "Others";
       acc[cat] = (acc[cat] || 0) + parseFloat(curr.amount);
       return acc;
@@ -369,19 +429,24 @@ function Dashboard() {
         <div>
           <div className="flex justify-between items-end mb-6">
             <h3 className="text-xl font-bold text-[#5B2D2D]">
-              Analytics Overview
+              Analytics
             </h3>
 
-            <div className="bg-white p-1 rounded-full flex gap-1 shadow-sm">
-              <button className="px-4 py-1.5 rounded-full bg-[#30302e] text-[#f8ecdd] text-xs font-bold shadow-sm">
-                Weekly
-              </button>
-              <button className="px-4 py-1.5 rounded-full text-stone-500 hover:bg-stone-100 text-xs font-bold transition-colors">
-                Monthly
-              </button>
-              <button className="px-4 py-1.5 rounded-full text-stone-500 hover:bg-stone-100 text-xs font-bold transition-colors">
-                Yearly
-              </button>
+            <div className="bg-white p-1 rounded-full flex gap-1 shadow-sm overflow-x-auto max-w-full">
+              {["Weekly", "Monthly", "Yearly"].map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setChart2Range(range)}
+                  className={`
+                    px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap
+                    ${chart2Range === range 
+                      ? "bg-[#2b2b28] text-[#f8ecdd] shadow-sm" 
+                      : "text-stone-600 hover:bg-stone-100"}
+                  `}
+                >
+                  {range}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -389,43 +454,43 @@ function Dashboard() {
             {/* Chart 1 */}
             <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col">
               <h4 className="text-stone-500 font-bold text-sm mb-4">
-                Spending Trend
+                Weekly Spending Trend
               </h4>
-              {/* Visual Placeholder for a Graph (Bars) */}
-              <div className="flex-1 flex items-end justify-between gap-2 px-2">
-                {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-full bg-emerald-100 rounded-t-lg relative group"
-                  >
-                    {/* The Fill */}
-                    <div
-                      style={{ height: `${h}%` }}
-                      className="absolute bottom-0 w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500"
-                    ></div>
+             
+              <div className="flex-1 flex items-end justify-between gap-1 md:gap-2 px-2">
+                {trendData.map((dayData, i) => (
+                  <div key={i} className="w-full flex flex-col items-center gap-2 group relative">
+                    
+                    {/* Tooltip on Hover */}
+                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1 px-2 rounded-md whitespace-nowrap z-10">
+                        ${dayData.amount.toFixed(0)}
+                    </div>
+
+                    {/* The Bar */}
+                    <div className="w-full bg-emerald-50 rounded-t-lg relative h-32 md:h-40 flex items-end overflow-hidden">
+                      <div
+                        style={{ height: `${dayData.percent}%` }}
+                        className="w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500 min-h-[4px]"
+                      ></div>
+                    </div>
+                    
+                    {/* Day Label */}
+                    <span className="text-[10px] md:text-xs text-stone-400 font-bold">{dayData.day}</span>
                   </div>
                 ))}
-              </div>
-
-              <div className="flex justify-between mt-2 text-xs text-stone-400 font-bold">
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
               </div>
             </div>
 
             {/* Chart 2: Expense Breakdown */}  
             <div className="bg-white p-6 rounded-[30px] min-h-[16rem] shadow-sm border border-stone-100">
-              <h4 className="text-stone-500 font-bold text-sm mb-4">
-                Where your money went
-              </h4>
-              <div className="space-y-4">
-                 
-                 {/* Logic: If we have transactions, map them. If not, show empty state */}
+              <div className="flex justify-between items-center mb-4">
+                 <h4 className="text-stone-500 font-bold text-sm">Where your money went</h4>
+                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                   {chart2Range} View
+                 </span>
+              </div>
+              
+              <div className="space-y-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                  {categoryData.length > 0 ? (
                     categoryData.map((item, index) => (
                       <ExpenseItem 
@@ -433,16 +498,14 @@ function Dashboard() {
                         label={item.label} 
                         amount={item.amount} 
                         percent={item.percent}
-                        // Use the calculated percentage for the bar width
                         widthVal={`${item.rawPercent}%`} 
                         color={item.color} 
                       />
                     ))
                  ) : (
-                    // Empty State / Fallback
                     <div className="flex flex-col items-center justify-center h-40 text-stone-400 gap-2">
-                       <p className="text-sm italic">No detailed expenses added yet.</p>
-                       <p className="text-xs">Use "Add Expense" to see breakdown.</p>
+                       <p className="text-sm italic">No expenses found for this {chart2Range.toLowerCase()}.</p>
+                       <p className="text-xs">Use "Add Expense" to start tracking.</p>
                     </div>
                  )}
 
