@@ -13,6 +13,10 @@ import InstallPrompt from './Components/InstallPrompt/InstallPrompt';
 import WaitingPage from './Components/WaitingPage.jsx/WaitingPage';
 import Pending from './Components/Pending/Pending';
 import LegacyTool from './Components/Stock/LegacyTool';
+import CalendarPage from './Components/Calendar/Calendar';
+import Profile from './Components/Profile/Profile';
+import Blogs from './Components/Blogs/Blogs';
+import PremiumModal from "../src/Components/Premium/Premium"
 
 function App() {
   return (
@@ -27,6 +31,30 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/blogs"
+        element={
+          <ProtectedRoute>
+            <Blogs />
+          </ProtectedRoute>
+        }
+      />
+       <Route
+        path="/premium"
+        element={
+          <ProtectedRoute>
+            <PremiumModal />
           </ProtectedRoute>
         }
       />
@@ -51,6 +79,14 @@ function App() {
         element={
           <ProtectedRoute>
             <DebtAI />
+          </ProtectedRoute>
+        }
+      />
+       <Route
+        path="/calendar"
+        element={
+          <ProtectedRoute>
+            <CalendarPage />
           </ProtectedRoute>
         }
       />
