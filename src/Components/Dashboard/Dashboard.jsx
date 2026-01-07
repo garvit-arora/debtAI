@@ -31,12 +31,7 @@ function Dashboard() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [showPricingModal, setShowPricingModal] = useState(false); 
-  const [isScanning, setIsScanning] = useState(false);
-
-  // REAL AI Habit State
-  const [dailyHabits, setDailyHabits] = useState([]);
-  const [generatingHabit, setGeneratingHabit] = useState(true);
+  const [chart2Range, setChart2Range] = useState("Monthly");
 
   const navigate = useNavigate();
   const auth = getAuth(app);
@@ -157,8 +152,66 @@ function Dashboard() {
   
   const urgentDebt = getUrgentDebt();
 
-  // --- BILL SCANNING (Keep existing) ---
-  const handleFileChange = async (e) => {
+  // CHART 1 LOGIC (Last 7 Days Trend)
+  const getWeeklyTrend = () => {
+    if (!userData || !userData.transactions) return Array(7).fill({ day: "", amount: 0, percent: 0 });
+
+    const transactions = Object.values(userData.transactions);
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const last7Days = [];
+
+    // 1. Generate last 7 days array (dates and labels)
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dayLabel = days[d.getDay()];
+        last7Days.push({ date: dateString, day: dayLabel, amount: 0 });
+    }
+
+    transactions.forEach(t => {
+        const tDate = t.date; // Assuming transaction date is stored as YYYY-MM-DD
+        const dayEntry = last7Days.find(d => d.date === tDate);
+        if (dayEntry) {
+            dayEntry.amount += parseFloat(t.amount);
+        }
+    });
+
+    // 3. Find max spend to calculate bar height percentages
+    const maxSpend = Math.max(...last7Days.map(d => d.amount));
+    
+    // 4. Add percentage property
+    return last7Days.map(d => ({
+        ...d,
+        percent: maxSpend > 0 ? (d.amount / maxSpend) * 100 : 0
+    }));
+  };
+
+  const trendData = getWeeklyTrend();
+
+  // CHART 2 FILTERING LOGIC
+  const filterTransactions = (transactions) => {
+    if (!transactions) return [];
+    
+    const now = new Date();
+    const transactionList = Object.values(transactions);
+
+    return transactionList.filter(t => {
+      const tDate = new Date(t.date);
+      const diffTime = Math.abs(now - tDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (chart2Range === "Weekly") return diffDays <= 7;
+      if (chart2Range === "Monthly") return diffDays <= 30;
+      if (chart2Range === "Yearly") return diffDays <= 365;
+      return true;
+    });
+  };
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // When user picks a file
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) await processBillImage(file);
   };
@@ -191,32 +244,39 @@ function Dashboard() {
             alert("Could not detect a clear total amount.");
         }
     } catch (error) {
-        console.error("Scanning failed:", error);
-        alert("Failed to process bill.");
-    } finally {
-        setIsScanning(false);
+        console.error("Upload failed:", error);
+        alert("Failed to upload bill.");
     }
   };
 
-  const extractAmountFromOCR = (data) => {
-    const fullText = data.readResult?.content;
-    if (!fullText) return null;
-    const decimalMoneyRegex = /[0-9,]+\.[0-9]{2}/g;
-    const matches = fullText.match(decimalMoneyRegex);
-    if (matches) {
-        const numbers = matches.map(m => parseFloat(m.replace(/,/g, '')));
-        if (numbers.length > 0) return Math.max(...numbers);
-    }
-    return null;
-  };
+  // const [showCamera, setShowCamera] = useState(false);
+   
+  //Process transactions to get category percentages
+  const getCategoryBreakdown = () => {
+    if (!userData || !userData.transactions) return [];
 
-  const saveBillToFirebase = async (amount) => {
-    if (!user) return;
-    const expenseData = {
-        amount: parseFloat(amount),
-        category: "Scanned Bill",
-        date: new Date().toISOString(),
-        description: "Auto-scanned via Azure"
+    // Apply the filter first
+    const filteredTransactions = filterTransactions(userData.transactions);
+    
+    // If no transactions match the filter (e.g., no expenses this week), return empty
+    if (filteredTransactions.length === 0) return [];
+
+    const total = filteredTransactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    
+    // Group by category
+    const grouped = filteredTransactions.reduce((acc, curr) => {
+      const cat = curr.category || "Others";
+      acc[cat] = (acc[cat] || 0) + parseFloat(curr.amount);
+      return acc;
+    }, {});
+
+    // Convert to array and format for display
+    const colors = {
+      "Food": "bg-emerald-500",
+      "Rent": "bg-[#30302e]",
+      "Transport": "bg-blue-500",
+      "Entertainment": "bg-orange-400",
+      "Others": "bg-stone-400"
     };
     await push(ref(db, `users/${user.uid}/transactions`), expenseData);
     const currentExpenses = parseFloat(userData?.expenses || 0);
@@ -453,9 +513,175 @@ function Dashboard() {
            )}
         </div>
 
-        {/* ANALYTICS SECTION (Placeholder for Charts) */}
-        <div className="bg-white p-6 rounded-[30px] shadow-sm border border-stone-100 h-64 flex items-center justify-center text-stone-400 font-medium">
-            (Analytics Charts Area - Keep your existing charts here)
+        <div>
+          <div className="flex justify-between items-end mb-6">
+            <h3 className="text-xl font-bold text-[#5B2D2D]">
+              Analytics
+            </h3>
+
+            <div className="bg-white p-1 rounded-full flex gap-1 shadow-sm overflow-x-auto max-w-full">
+              {["Weekly", "Monthly", "Yearly"].map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setChart2Range(range)}
+                  className={`
+                    px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap
+                    ${chart2Range === range 
+                      ? "bg-[#2b2b28] text-[#f8ecdd] shadow-sm" 
+                      : "text-stone-600 hover:bg-stone-100"}
+                  `}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           
+            {/* <div className="bg-white p-6 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col">
+              <h4 className="text-stone-500 font-bold text-sm mb-4">
+                Weekly Spending Trend
+              </h4>
+              
+              <div className="flex-1 flex items-end justify-between gap-2 px-2">
+                {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
+                  <div
+                    key={i}
+                    className="w-full bg-emerald-100 rounded-t-lg relative group"
+                  >
+                   
+                    <div
+                      style={{ height: `${h}%` }}
+                      className="absolute bottom-0 w-full bg-[#5B2D2D] rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-500"
+                    ></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between mt-2 text-xs text-stone-400 font-bold">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+              </div>
+            </div> */}
+
+            {/* Chart 1: Spending Trend (Hybrid Fix + Enhanced Dots) */}
+            <div className="bg-white py-6 px-10 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col relative z-0 overflow-visible">
+              <h4 className="text-stone-500 font-bold text-sm mb-6">
+                Weekly Spending Trend
+              </h4>
+
+              {/* Graph Container */}
+              <div className="flex-1 relative w-full mb-6 z-0">
+                
+                {/* LAYER 1: The SVG Line (Background) */}
+                <svg
+                  className="absolute inset-0 w-full h-full overflow-visible z-0"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                >
+                  <polyline
+                    fill="none"
+                    stroke="#5B2D2D"
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
+                    points={trendData.map((d, i) => {
+                      const divisor = trendData.length > 1 ? trendData.length - 1 : 1;
+                      const x = (i / divisor) * 100;
+                      const y = 100 - d.percent;
+                      return `${x},${y}`;
+                    }).join(" ")}
+                  />
+                </svg>
+
+                {/* LAYER 2: HTML Dots & Tooltips (Foreground) */}
+                {trendData.map((d, i) => {
+                  const divisor = trendData.length > 1 ? trendData.length - 1 : 1;
+                  const leftPos = (i / divisor) * 100;
+                  const bottomPos = d.percent;
+
+                  return (
+                    <div
+                      key={i}
+                      // Increased w-8 h-8 creates a larger invisible hover target
+                      className="absolute group z-10 w-10 h-10 flex items-center justify-center cursor-pointer -translate-x-1/2 translate-y-1/2"
+                      style={{
+                        left: `${leftPos}%`,
+                        bottom: `${bottomPos}%`,
+                      }}
+                    >
+                      {/* ENHANCED DOT STRUCTURE */}
+                      
+                      {/* 1. The Glow Ring (Expands on hover) */}
+                      <div className="absolute w-full h-full bg-emerald-500/20 rounded-full scale-50 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"></div>
+                      
+                      {/* 2. The Main Dot (Solid center) */}
+                      <div className="relative z-10 w-3 h-3 bg-emerald-500 rounded-full border-[1px] border-white shadow-[0_2px_5px_rgba(16,185,129,0.3)] transition-all duration-300 group-hover:scale-125 group-hover:bg-emerald-600"></div>
+
+
+                      {/* The Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
+                        <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">
+                          ${d.amount.toFixed(0)}
+                        </div>
+                        {/* Little triangle arrow */}
+                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* LAYER 3: X-Axis Labels */}
+                <div className="absolute top-full w-full flex justify-between text-xs text-stone-400 font-bold mt-2">
+                  {trendData.map((d, i) => (
+                    // Negative margins ensure the text centers exactly under the dot's center point
+                    <div key={i} className="w-10 text-center -ml-5 first:ml-0 last:-ml-10 first:text-left last:text-right">
+                        {d.day}
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            </div>
+
+            {/* Chart 2: Expense Breakdown */}  
+            <div className="bg-white p-6 rounded-[30px] min-h-[16rem] shadow-sm border border-stone-100">
+              <div className="flex justify-between items-center mb-4">
+                 <h4 className="text-stone-500 font-bold text-sm">Where your money went</h4>
+                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                   {chart2Range} View
+                 </span>
+              </div>
+              
+              <div className="space-y-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                 {categoryData.length > 0 ? (
+                    categoryData.map((item, index) => (
+                      <ExpenseItem 
+                        key={index}
+                        label={item.label} 
+                        amount={item.amount} 
+                        percent={item.percent}
+                        widthVal={`${item.rawPercent}%`} 
+                        color={item.color} 
+                      />
+                    ))
+                 ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-stone-400 gap-2">
+                       <p className="text-sm italic">No expenses found for this {chart2Range.toLowerCase()}.</p>
+                       <p className="text-xs">Use "Add Expense" to start tracking.</p>
+                    </div>
+                 )}
+
+              </div>
+            </div>
+
+
+          </div>
         </div>
 
         <Footer />
