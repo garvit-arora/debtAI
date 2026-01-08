@@ -22,11 +22,14 @@ import {
   Zap,
   ArrowRight,
   PieChart as PieIcon,
-  Activity
+  Activity,
+  Menu, // Added for mobile
+  X     // Added for mobile
 } from "lucide-react";
 
+// CHANGED: w-48 -> w-full sm:w-48 (Full width on mobile, fixed on desktop)
 const quickActionStyle =
-  "relative h-16 w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
+  "relative h-16 w-full sm:w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
@@ -36,6 +39,9 @@ function Dashboard() {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [chart2Range, setChart2Range] = useState("Monthly");
+  
+  // NEW: Mobile Sidebar State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // AI Habit State
   const [dailyHabits, setDailyHabits] = useState([]);
@@ -65,18 +71,15 @@ function Dashboard() {
              const now = Date.now();
              if (data.isPremium === true && data.premiumExpiry && now > data.premiumExpiry) {
                  console.log("Subscription expired. Downgrading to free.");
-                 // Auto-downgrade in database
                  update(userRef, { 
                      isPremium: false, 
                      plan: "expired" 
                  });
-                 // Update local state to reflect change immediately
                  setUserData({ ...data, isPremium: false });
              } else {
                  setUserData(data);
              }
 
-             // Ensure premium field exists for new users
              if (data.isPremium === undefined) {
                 update(userRef, { isPremium: false });
              }
@@ -139,12 +142,9 @@ function Dashboard() {
     navigate('/debtai', { state: { autoPrompt: `I want to execute this habit today: "${habitText}". Give me a specific plan.` } });
   };
 
-  // --- DATA HELPERS (FIXED) ---
-  
-  // 1. Get Debt Free Date
+  // --- DATA HELPERS ---
   const getDebtFreeDate = () => {
     if (!userData || !userData.debts) return "Calculating...";
-    // Filter only UNPAID debts
     const debtsArray = Object.values(userData.debts).filter(d => d.status !== 'paid');
     const totalDebt = debtsArray.reduce((sum, debt) => sum + (parseFloat(debt.amount) || 0), 0);
     const disposableIncome = (userData.income - userData.expenses);
@@ -155,18 +155,13 @@ function Dashboard() {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
-  // 2. Get Urgent Debt (FIXED: Filters Paid & preserves ID)
   const getUrgentDebt = () => {
     if (!userData || !userData.debts) return null;
-    
-    // Map object to array AND keep key as 'id'
     const debtsArray = Object.entries(userData.debts)
         .map(([key, val]) => ({ id: key, ...val }))
-        .filter(d => d.status !== 'paid'); // Strict filter
+        .filter(d => d.status !== 'paid'); 
 
     if (debtsArray.length === 0) return null;
-
-    // Sort by stress (highest first), then interest rate
     return debtsArray.reduce((prev, current) => {
         const stressOrder = { "Extreme": 4, "High": 3, "Medium": 2, "Low": 1 };
         const prevScore = stressOrder[prev.stressLevel] || 0;
@@ -177,7 +172,6 @@ function Dashboard() {
   
   const urgentDebt = getUrgentDebt();
 
-  // 3. Mark Debt as Paid
   const handleMarkPaid = async (debtId) => {
       if(!debtId) return;
       if(window.confirm("Mark this debt as paid? Great job!")) {
@@ -231,7 +225,6 @@ function Dashboard() {
   };
   const categoryData = getCategoryBreakdown();
 
-  // --- PREMIUM CHART DATA CALC ---
   const getDebtDistribution = () => {
       if(!userData || !userData.debts) return [];
       const activeDebts = Object.values(userData.debts).filter(d => d.status !== 'paid');
@@ -240,11 +233,10 @@ function Dashboard() {
           name: d.name,
           value: parseFloat(d.amount),
           percent: ((parseFloat(d.amount) / total) * 100)
-      })).sort((a,b) => b.value - a.value).slice(0, 4); // Top 4
+      })).sort((a,b) => b.value - a.value).slice(0, 4); 
   };
   const debtDistribution = getDebtDistribution();
 
-  // --- BILL SCANNING ---
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) await processBillImage(file);
@@ -287,7 +279,7 @@ function Dashboard() {
   const isPremium = userData?.isPremium === true;
 
   return (
-    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative">
+    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative overflow-x-hidden">
       
       {showExpenseModal && <ExpenseInputForm onClose={() => setShowExpenseModal(false)} />}
       {showPricingModal && <PricingModal onClose={() => setShowPricingModal(false)} />}
@@ -301,20 +293,52 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="z-50 hidden md:block"><Sidebar /></div>
+      {/* --- NEW: MOBILE SIDEBAR OVERLAY & DRAWER --- */}
+      {/* 1. Backdrop for mobile */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
-      <main className="flex-1 ml-0 md:ml-28 p-6 md:p-12 overflow-y-auto">
+      {/* 2. Sidebar Container (Slide-out on mobile, Fixed on Desktop) */}
+      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-white md:bg-transparent shadow-2xl md:shadow-none transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:block ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        {/* Close Button for Mobile */}
+        <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 p-2 text-stone-500 hover:bg-stone-100 rounded-full md:hidden"
+        >
+            <X size={24} />
+        </button>
+        <Sidebar />
+      </div>
+
+      {/* CHANGED: Main container padding (p-4 mobile, p-12 desktop) */}
+      <main className="flex-1 p-4 md:p-12 overflow-y-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           
           <div className="lg:col-span-2 flex flex-col gap-8">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-bold text-[#5B2D2D] mb-2">Let's Start <br /> Strong!</h1>
-              <p className="text-[#30302e] opacity-70">
-                Hello, {userData?.name || "User"}. {isPremium && <span className="inline-flex items-center gap-1 bg-[#5B2D2D] text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider ml-2"><Crown size={10} /> PRO</span>}
-              </p>
+            <div className="flex items-start justify-between">
+                <div>
+                    {/* NEW: Mobile Hamburger Trigger */}
+                    <div className="flex items-center gap-3 mb-2 md:mb-0">
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden"
+                        >
+                            <Menu size={28} />
+                        </button>
+                        <h1 className="text-3xl md:text-6xl font-bold text-[#5B2D2D]">Let's Start <br className="hidden md:block"/> Strong!</h1>
+                    </div>
+                    <p className="text-[#30302e] opacity-70 mt-1">
+                        Hello, {userData?.name || "User"}. {isPremium && <span className="inline-flex items-center gap-1 bg-[#5B2D2D] text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider ml-2"><Crown size={10} /> PRO</span>}
+                    </p>
+                </div>
             </div>
 
-            <div className="flex gap-4 flex-wrap">
+            {/* CHANGED: Flex wrap logic for buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full">
               <button onClick={() => setShowExpenseModal(true)} className={quickActionStyle}>
                 <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-800 rounded-[24px]`}>{<Plus />}</div>
                 <div className="whitespace-nowrap ml-2"><span>Add Expense</span></div>
@@ -326,9 +350,9 @@ function Dashboard() {
               </label>
             </div>
 
-            <div className="bg-white/60 backdrop-blur-sm p-8 rounded-[30px] shadow-sm border border-white/40">
+            <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[30px] shadow-sm border border-white/40">
               <div className="flex justify-between items-end mb-4">
-                <div><h3 className="text-xl font-bold text-[#5B2D2D]">Monthly Budget</h3><p className="text-sm text-stone-500">You've spent {Math.round((userData?.expenses / userData?.income) * 100) || 0}%</p></div>
+                <div><h3 className="text-lg md:text-xl font-bold text-[#5B2D2D]">Monthly Budget</h3><p className="text-xs md:text-sm text-stone-500">You've spent {Math.round((userData?.expenses / userData?.income) * 100) || 0}%</p></div>
                 <div className="w-10 h-10 rounded-full bg-[#edffd9] flex items-center justify-center text-[#5B2D2D]"><TrendingUp size={20} /></div>
               </div>
               <div className="w-full h-4 bg-stone-200 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-1000" style={{ width: `${Math.min((userData?.expenses / userData?.income) * 100, 100)}%` }}></div></div>
@@ -339,15 +363,15 @@ function Dashboard() {
           <div className="flex flex-col gap-6 h-full">
             <div className="flex justify-end gap-3 flex-wrap md:flex-nowrap">
                 {!isPremium && (
-                    <button onClick={() => setShowPricingModal(true)} className=" cursor-pointer flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse duration-[2000ms] border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm">Upgrade PRO</span></button>
+                    <button onClick={() => setShowPricingModal(true)} className=" cursor-pointer flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse duration-[2000ms] border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm whitespace-nowrap">Upgrade PRO</span></button>
                 )}
-                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 cursor-pointer px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="hidden md:inline">Profile</span></button>
+                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 cursor-pointer px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40 flex-1 md:flex-none justify-center"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="">Profile</span></button>
             </div>
 
-            <div onClick={() => navigate('/debtai')} className="relative group cursor-pointer h-full min-h-[250px]">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#30302e] to-[#141414] rounded-[35px] p-8 flex flex-col justify-between shadow-xl transition-transform duration-500 group-hover:scale-[1.02]">
+            <div onClick={() => navigate('/debtai')} className="relative group cursor-pointer h-full min-h-[200px] md:min-h-[250px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#30302e] to-[#141414] rounded-[35px] p-6 md:p-8 flex flex-col justify-between shadow-xl transition-transform duration-500 group-hover:scale-[1.02]">
                 <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><span className="text-[#f8ecdd] text-sm font-medium tracking-widest uppercase">DebtAI Assistant</span></div>
-                <div className="space-y-4"><h2 className="text-3xl text-white font-light">"How can I save <span className="text-emerald-400 font-bold">$200</span>?"</h2><p className="text-stone-400 text-sm">Tap to chat with your financial data.</p></div>
+                <div className="space-y-4"><h2 className="text-2xl md:text-3xl text-white font-light">"How can I save <span className="text-emerald-400 font-bold">$200</span>?"</h2><p className="text-stone-400 text-sm">Tap to chat with your financial data.</p></div>
                 <div className="w-full h-12 bg-white/10 rounded-full flex items-center px-4 backdrop-blur-md border border-white/5"><span className="text-stone-400 text-sm">Ask anything...</span><div className="ml-auto w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black"><ArrowUpRight size={16} /></div></div>
               </div>
             </div>
@@ -356,7 +380,13 @@ function Dashboard() {
         
         {/* --- AI DAILY HABITS --- */}
         <div className="mb-12">
-            <div className="flex items-center gap-3 mb-6"><div className="p-2 bg-purple-100 text-purple-600 rounded-xl shadow-sm"><Sparkles size={24} /></div><div><h3 className="text-xl font-bold text-[#5B2D2D]">Daily AI Habits</h3><p className="text-sm text-stone-500">Rapid debt-elimination strategies.</p></div>{!isPremium && <div className="ml-auto hidden sm:flex items-center gap-2 bg-stone-100 border border-stone-200 px-3 py-1 rounded-full"><Lock size={12} className="text-stone-400"/><span className="text-xs font-bold text-stone-500">2 Locked</span></div>}</div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 text-purple-600 rounded-xl shadow-sm"><Sparkles size={24} /></div>
+                    <div><h3 className="text-xl font-bold text-[#5B2D2D]">Daily AI Habits</h3><p className="text-sm text-stone-500">Rapid debt-elimination strategies.</p></div>
+                </div>
+                {!isPremium && <div className="mt-2 sm:mt-0 sm:ml-auto flex items-center gap-2 bg-stone-100 border border-stone-200 px-3 py-1 rounded-full"><Lock size={12} className="text-stone-400"/><span className="text-xs font-bold text-stone-500">2 Locked</span></div>}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div onClick={() => handleHabitClick(dailyHabits[0] || "Track spending")} className="bg-white p-6 rounded-[30px] border border-stone-100 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden group hover:shadow-md transition-all cursor-pointer hover:border-emerald-200">
                     {generatingHabit ? <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-50 gap-3"><Loader2 size={24} className="text-[#5B2D2D] animate-spin" /><span className="text-xs font-bold text-[#5B2D2D] animate-pulse">Consulting AI...</span></div> : <><div className="text-[#5B2D2D] font-medium text-lg leading-relaxed relative z-10">"{dailyHabits[0] || "Track your spending today."}"</div><div className="flex justify-between items-end mt-4"><span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">Top Priority <ArrowRight size={10}/></span><div className="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-300 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors"><Sparkles size={16} /></div></div></>}
@@ -373,19 +403,19 @@ function Dashboard() {
             </div>
         </div>
 
-        {/* ALERTS SECTION (Corrected Logic) */}
+        {/* ALERTS SECTION */}
         <div className="mb-12">
           <h3 className="text-xl font-bold text-[#5B2D2D] mb-6 flex items-center gap-2"><AlertTriangle className="text-orange-500" /> Attention Needed</h3>
           {urgentDebt ? (
              <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex flex-col md:flex-row items-center justify-between gap-4">
-               <div className="flex gap-4 items-center">
-                 <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm"><DollarSign size={24} /></div>
+               <div className="flex gap-4 items-center w-full">
+                 <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm shrink-0"><DollarSign size={24} /></div>
                  <div>
                    <h4 className="font-bold text-[#5B2D2D]">{urgentDebt.name} Payment</h4>
                    <p className="text-sm text-stone-500">Due: {urgentDebt.dueDate} • Interest: {urgentDebt.interestRate}%</p>
                  </div>
                </div>
-               <button onClick={() => handleMarkPaid(urgentDebt.id)} className="px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors cursor-pointer">Mark as Paid</button>
+               <button onClick={() => handleMarkPaid(urgentDebt.id)} className="w-full md:w-auto px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors cursor-pointer whitespace-nowrap">Mark as Paid</button>
              </div>
            ) : (
              <div className="p-6 bg-emerald-100 font-semibold border border-emerald-300 rounded-[24px] text-emerald-800">No pending debts! You are doing great.</div>
@@ -405,7 +435,7 @@ function Dashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Chart 1: SVG Trend */}
-            <div className="bg-white py-6 px-10 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col relative z-0 overflow-visible">
+            <div className="bg-white py-6 px-4 md:px-10 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col relative z-0 overflow-visible">
               <h4 className="text-stone-500 font-bold text-sm mb-6">Weekly Spending Trend</h4>
               <div className="flex-1 relative w-full mb-6 z-0">
                 <svg className="absolute inset-0 w-full h-full overflow-visible z-0" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -419,7 +449,8 @@ function Dashboard() {
                     <div key={i} className="absolute group z-10 w-10 h-10 flex items-center justify-center cursor-pointer -translate-x-1/2 translate-y-1/2" style={{ left: `${leftPos}%`, bottom: `${bottomPos}%` }}>
                       <div className="absolute w-full h-full bg-emerald-500/20 rounded-full scale-50 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"></div>
                       <div className="relative z-10 w-3 h-3 bg-emerald-500 rounded-full border-[1px] border-white shadow-[0_2px_5px_rgba(16,185,129,0.3)] transition-all duration-300 group-hover:scale-125 group-hover:bg-emerald-600"></div>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
+                      {/* Tooltip hidden on mobile usually, displayed on hover */}
+                      <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
                         <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">${d.amount.toFixed(0)}</div>
                         <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>
                       </div>
@@ -439,7 +470,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* --- NEW: PREMIUM ANALYTICS (Pie Chart & Health) --- */}
+        {/* --- PREMIUM ANALYTICS (Pie Chart & Health) --- */}
         <div className="mt-12">
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-yellow-100 text-yellow-600 rounded-xl shadow-sm"><Crown size={24} /></div>
@@ -453,9 +484,9 @@ function Dashboard() {
                     
                     {isPremium ? (
                         debtDistribution.length > 0 ? (
-                            <div className="flex items-center justify-center h-48 gap-8">
+                            <div className="flex items-center justify-center h-48 gap-4 md:gap-8">
                                 {/* Simple CSS Pie Chart */}
-                                <div className="w-32 h-32 rounded-full relative bg-stone-100" style={{ background: `conic-gradient(
+                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full relative bg-stone-100 shrink-0" style={{ background: `conic-gradient(
                                     #ef4444 0% ${debtDistribution[0]?.percent || 0}%, 
                                     #f97316 ${debtDistribution[0]?.percent || 0}% ${(debtDistribution[0]?.percent || 0) + (debtDistribution[1]?.percent || 0)}%,
                                     #eab308 ${(debtDistribution[0]?.percent || 0) + (debtDistribution[1]?.percent || 0)}% 100%
@@ -465,7 +496,7 @@ function Dashboard() {
                                 <div className="space-y-2">
                                     {debtDistribution.map((d, i) => (
                                         <div key={i} className="flex items-center gap-2 text-xs font-bold text-stone-600">
-                                            <div className={`w-3 h-3 rounded-full ${i===0 ? 'bg-red-500' : i===1 ? 'bg-orange-500' : 'bg-yellow-500'}`}></div>
+                                            <div className={`w-3 h-3 rounded-full shrink-0 ${i===0 ? 'bg-red-500' : i===1 ? 'bg-orange-500' : 'bg-yellow-500'}`}></div>
                                             <span>{d.name} ({Math.round(d.percent)}%)</span>
                                         </div>
                                     ))}
@@ -473,7 +504,6 @@ function Dashboard() {
                             </div>
                         ) : <div className="flex items-center justify-center h-40 text-stone-400">No debt data available.</div>
                     ) : (
-                        // LOCKED STATE
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm z-10 gap-3">
                             <Lock size={32} className="text-[#5B2D2D]"/>
                             <button className="px-6 py-2 bg-[#5B2D2D] text-white rounded-full font-bold text-sm hover:scale-105 transition-transform">Unlock Analytics</button>
@@ -514,7 +544,7 @@ function Dashboard() {
 
 const ExpenseItem = ({ label, amount, percent, widthVal, color }) => (
   <div className="flex items-center gap-4">
-    <div className={`w-3 h-3 rounded-full ${color}`}></div>
+    <div className={`w-3 h-3 rounded-full shrink-0 ${color}`}></div>
     <div className="flex-1">
       <div className="flex justify-between text-sm font-bold text-[#5B2D2D]"><span>{label}</span><span>{amount}</span></div>
       <div className="w-full h-1.5 bg-stone-100 rounded-full mt-1 overflow-hidden"><div style={{ width: widthVal || percent }} className={`h-full ${color} rounded-full`}></div></div>
