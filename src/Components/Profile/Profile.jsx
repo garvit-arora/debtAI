@@ -26,7 +26,8 @@ import {
   Mail,
   Crown,
   Zap,
-  Star
+  Star,
+  Menu // Added Menu Icon
 } from "lucide-react";
 
 const strategies = [
@@ -53,6 +54,9 @@ export default function Profile() {
   const [showDebtModal, setShowDebtModal] = useState(false);
   const [editingDebtIndex, setEditingDebtIndex] = useState(null);
   
+  // Mobile Sidebar State (Added)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Data State
   const [isPremium, setIsPremium] = useState(false);
   const [planDetails, setPlanDetails] = useState("Free");
@@ -265,24 +269,57 @@ export default function Profile() {
 
   return (
     <div className="flex min-h-screen bg-[#f8ecdd] font-sans relative">
-      <div className="z-50 hidden md:block">
+      
+      {/* --- SIDEBAR LOGIC --- */}
+      
+      {/* 1. Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* 2. Mobile Drawer */}
+      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
+        >
+            <X size={24} />
+        </button>
+        <Sidebar />
+      </div>
+
+      {/* 3. Desktop Sidebar (Fixed) */}
+      <div className="hidden md:block">
         <Sidebar />
       </div>
 
       {showPricingModal && <PricingModal onClose={() => setShowPricingModal(false)} />}
 
-      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto">
+      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto w-full">
         <div className="max-w-4xl mx-auto space-y-8 pb-12">
           
           {/* HEADER */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-[#5B2D2D]">My Profile</h1>
-              <p className="text-[#5B2D2D]/70">Manage your data and subscription.</p>
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+               {/* Hamburger Button (Added) */}
+               <button 
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden mt-1"
+               >
+                  <Menu size={28} />
+               </button>
+               <div>
+                 <h1 className="text-3xl md:text-4xl font-bold text-[#5B2D2D]">My Profile</h1>
+                 <p className="text-[#5B2D2D]/70 text-sm md:text-base">Manage your data and subscription.</p>
+               </div>
             </div>
+            
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors shadow-sm shrink-0"
             >
               <LogOut size={18} />
               <span className="hidden sm:inline">Logout</span>
@@ -291,7 +328,7 @@ export default function Profile() {
 
           {/* --- NEW: SUBSCRIPTION CARD --- */}
           <div className={`p-6 rounded-[30px] border shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 transition-all relative overflow-hidden ${isPremium ? "bg-gradient-to-r from-gray-900 to-gray-800 text-white border-gray-700" : "bg-white border-stone-100"}`}>
-             
+              
              {/* Decor */}
              {isPremium && (
                  <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
@@ -299,7 +336,7 @@ export default function Profile() {
                  </div>
              )}
 
-             <div className="flex items-center gap-4 z-10">
+             <div className="flex flex-col md:flex-row items-center gap-4 z-10 text-center md:text-left">
                  <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-md ${isPremium ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-black" : "bg-stone-100 text-stone-400"}`}>
                      {isPremium ? <Crown size={32} fill="black" /> : <User size={32} />}
                  </div>
@@ -321,7 +358,7 @@ export default function Profile() {
                         <span>Upgrade Now</span>
                      </button>
                  ) : (
-                     <div className="flex items-center gap-2 px-6 py-2 bg-white/10 rounded-full border border-white/20">
+                     <div className="flex items-center justify-center gap-2 px-6 py-2 bg-white/10 rounded-full border border-white/20">
                         <CheckCircle2 size={16} className="text-emerald-400" />
                         <span className="text-sm font-bold text-emerald-100">Active</span>
                      </div>
@@ -416,7 +453,7 @@ export default function Profile() {
                 <button 
                     onClick={handleSaveProfile}
                     disabled={savingProfile}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#5B2D2D] text-white rounded-xl font-bold hover:bg-[#422121] transition-all disabled:opacity-70 shadow-lg"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#5B2D2D] text-white rounded-xl font-bold hover:bg-[#422121] transition-all disabled:opacity-70 shadow-lg"
                 >
                     {savingProfile ? <Loader2 className="animate-spin" size={20}/> : <Save size={20} />}
                     <span>{savingProfile ? "Saving..." : "Save Profile Changes"}</span>
@@ -478,7 +515,7 @@ export default function Profile() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <button 
                             onClick={handlePasswordReset}
-                            className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors text-stone-600 font-medium"
+                            className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors text-stone-600 font-medium justify-center md:justify-start"
                         >
                             <Lock size={18} />
                             Reset Password
@@ -486,7 +523,7 @@ export default function Profile() {
 
                         <button 
                             onClick={handleExportData}
-                            className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors text-stone-600 font-medium"
+                            className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors text-stone-600 font-medium justify-center md:justify-start"
                         >
                             <Download size={18} />
                             Export Data
@@ -494,7 +531,7 @@ export default function Profile() {
 
                         <button 
                             onClick={handleDeleteAccount}
-                            className="flex items-center gap-3 p-4 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors text-red-600 font-medium"
+                            className="flex items-center gap-3 p-4 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors text-red-600 font-medium justify-center md:justify-start"
                         >
                             <AlertOctagon size={18} />
                             Delete Account
@@ -508,7 +545,7 @@ export default function Profile() {
               <button 
                 onClick={handleSaveSettings}
                 disabled={savingSettings}
-                className="flex items-center gap-2 px-6 py-3 bg-[#5B2D2D] text-white rounded-xl font-bold hover:bg-[#422121] transition-all disabled:opacity-70 shadow-lg"
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#5B2D2D] text-white rounded-xl font-bold hover:bg-[#422121] transition-all disabled:opacity-70 shadow-lg"
               >
                 {savingSettings ? <Loader2 className="animate-spin" size={20}/> : <Save size={20} />}
                 <span>{savingSettings ? "Saving..." : "Save Preferences"}</span>
@@ -528,7 +565,8 @@ export default function Profile() {
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-800 rounded-xl font-bold hover:bg-emerald-200 transition-colors"
               >
                 <Plus size={18} />
-                Add Debt
+                <span className="hidden sm:inline">Add Debt</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
 
@@ -550,13 +588,13 @@ export default function Profile() {
               <div className="grid grid-cols-1 gap-4">
                 {formData.debts.map((debt, idx) => (
                   <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                      <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold shrink-0">
                         {idx + 1}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-[#5B2D2D] text-lg">{debt.name}</h3>
-                        <div className="flex gap-3 text-sm text-stone-500">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-[#5B2D2D] text-lg truncate">{debt.name}</h3>
+                        <div className="flex flex-wrap gap-2 sm:gap-3 text-sm text-stone-500">
                            <span className="bg-stone-100 px-2 py-0.5 rounded-md text-stone-600 font-medium">
                              ${debt.amount}
                            </span>
