@@ -9,7 +9,6 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, push, onValue, serverTimestamp, remove, update } from "firebase/database";
 import { app } from "../../firebase";
 
-// ... (ConfirmationModal and BotMessage components remain exactly the same)
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
   return (
@@ -31,9 +30,8 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   );
 };
 
-const BotMessage = ({ text, shouldAnimate }) => {
-  const [displayResponse, setDisplayResponse] = useState("");
-  const [completed, setCompleted] = useState(false);
+// Simplified BotMessage for Streaming Compatibility
+const BotMessage = ({ text }) => {
   const [translatedText, setTranslatedText] = useState(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -41,26 +39,6 @@ const BotMessage = ({ text, shouldAnimate }) => {
   const translatorKey = import.meta.env.VITE_AZURE_TRANSLATOR_KEY;
   const translatorEndpoint = import.meta.env.VITE_AZURE_TRANSLATOR_ENDPOINT;
   const speechRegion = import.meta.env.VITE_AZURE_REGION;
-
-  useEffect(() => {
-    const safeText = text || "⚠️ (No response text)";
-    if (!shouldAnimate) {
-      setDisplayResponse(safeText);
-      setCompleted(true);
-      return;
-    }
-    setCompleted(false);
-    let i = 0;
-    const intervalId = setInterval(() => {
-      setDisplayResponse(safeText.slice(0, i + 1));
-      i++;
-      if (i > safeText.length) {
-        clearInterval(intervalId);
-        setCompleted(true);
-      }
-    }, 15);
-    return () => clearInterval(intervalId);
-  }, [text, shouldAnimate]);
 
   const handleTranslate = async () => {
     if (translatedText) {
@@ -90,11 +68,11 @@ const BotMessage = ({ text, shouldAnimate }) => {
     }
   };
 
-  const textToShow = showTranslation && translatedText ? translatedText : (completed ? (text || "⚠️ (No response text)") : displayResponse);
+  const textToShow = showTranslation && translatedText ? translatedText : (text || "Thinking...");
 
   return (
     <div className="flex flex-col">
-      <div className={`text-sm sm:text-base text-gray-900 ${completed ? "" : "typing-cursor"}`}>
+      <div className="text-sm sm:text-base text-gray-900">
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
             strong: ({node, ...props}) => <span className="font-bold text-purple-900" {...props} />,
             ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2" {...props} />,
@@ -109,7 +87,9 @@ const BotMessage = ({ text, shouldAnimate }) => {
           {textToShow}
         </ReactMarkdown>
       </div>
-      {completed && (
+      
+      {/* Only show translate button if text has length > 10 */}
+      {text && text.length > 10 && (
         <div className="mt-2 flex justify-end border-t border-gray-200 pt-1">
           <button onClick={handleTranslate} disabled={isTranslating} className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1 rounded transition-colors">
             <MdTranslate size={14} />
@@ -127,7 +107,10 @@ function DebtAI() {
   const auth = getAuth(app);
   const db = getDatabase(app);
   const messagesEndRef = useRef(null);
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  
+  // Use http for localhost if developing locally, else use your deployed backend URL
+  const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080"; 
+  
   const speechKey = import.meta.env.VITE_AZURE_SPEECH_KEY;
   const speechRegion = import.meta.env.VITE_AZURE_REGION;
 
@@ -201,8 +184,10 @@ function DebtAI() {
         const data = snapshot.val();
         if (data) {
           const loadedMsgs = Object.values(data);
-          const processedMsgs = loadedMsgs.map(m => ({ ...m, shouldAnimate: false }));
-          setMessages(processedMsgs);
+          // Only take existing messages, new streaming ones will be handled locally first
+          if(!isTyping) { 
+             setMessages(loadedMsgs);
+          }
         } else {
           setMessages([]);
         }
@@ -211,7 +196,7 @@ function DebtAI() {
     } else {
       setMessages([]);
     }
-  }, [user, currentSessionId, db]);
+  }, [user, currentSessionId, db, isTyping]); // Added isTyping dependency
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -273,6 +258,7 @@ function DebtAI() {
     setChatToDelete(null);
   };
 
+  // --- THE NEW STREAMING HANDLE SEND ---
   const handleSend = async (manualText = null) => {
     const textToSend = manualText || input;
 
@@ -287,14 +273,15 @@ function DebtAI() {
     setInput("");
     setIsTyping(true);
 
+    let activeSessionId = currentSessionId;
+
     try {
-        let activeSessionId = currentSessionId;
-        
-        // 2. INCREMENT COUNTER
+        // 2. INCREMENT COUNTER (Optimistic)
         await update(ref(db, `users/${user.uid}`), {
             usageCount: usageCount + 1
         });
 
+        // 3. Create Session if needed
         if (!activeSessionId) {
             const newSessionRef = await push(ref(db, `users/${user.uid}/conversations`), {
                 createdAt: serverTimestamp(),
@@ -304,18 +291,22 @@ function DebtAI() {
             setCurrentSessionId(activeSessionId);
         }
 
-        const tempUserMsg = { sender: "user", text: textToSend, shouldAnimate: false };
-        setMessages(prev => [...prev, tempUserMsg]);
-
-        const messagesRef = ref(db, `users/${user.uid}/conversations/${activeSessionId}/messages`);
+        // 4. Update UI Immediately
+        const userMsg = { sender: "user", text: textToSend };
+        setMessages(prev => [...prev, userMsg]);
         
+        // 5. Add Placeholder for AI
+        setMessages(prev => [...prev, { sender: "bot", text: "" }]);
+
+        // 6. Save User Message to Firebase (Background)
+        const messagesRef = ref(db, `users/${user.uid}/conversations/${activeSessionId}/messages`);
         await push(messagesRef, {
             sender: "user",
             text: textToSend,
-            timestamp: serverTimestamp(),
-            shouldAnimate: false
+            timestamp: serverTimestamp()
         });
 
+        // 7. Make Request
         const response = await fetch(`${backendURL}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -327,33 +318,52 @@ function DebtAI() {
 
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
-        const data = await response.json();
-        const aiText = data.reply || "Error: No reply text received.";
+        // 8. Stream Reader
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let done = false;
+        let fullAiResponse = "";
 
+        while (!done) {
+            const { value, done: doneReading } = await reader.read();
+            done = doneReading;
+            const chunkValue = decoder.decode(value, { stream: true });
+            
+            fullAiResponse += chunkValue;
+
+            setMessages((prev) => {
+                const newMsgs = [...prev];
+                const lastMsg = newMsgs[newMsgs.length - 1];
+                lastMsg.text = fullAiResponse; // Update last message
+                return newMsgs;
+            });
+        }
+
+        // 9. Save Full AI Response to Firebase
         await push(messagesRef, {
             sender: "bot",
-            text: aiText,
-            timestamp: serverTimestamp(), 
-            isNew: true 
+            text: fullAiResponse,
+            timestamp: serverTimestamp()
         });
         
     } catch (error) {
         console.error(">>> CRITICAL ERROR IN HANDLESEND:", error);
-        setMessages(prev => [...prev, { 
-            sender: "bot", 
-            text: `System Error: ${error.message}. Check F12 Console.`, 
-            shouldAnimate: false 
-        }]);
+        setMessages(prev => {
+            const newMsgs = [...prev];
+            // Remove the empty bot placeholder if failed
+            if(newMsgs[newMsgs.length-1].sender === 'bot' && !newMsgs[newMsgs.length-1].text) {
+                newMsgs.pop(); 
+            }
+            newMsgs.push({ 
+                sender: "bot", 
+                text: `System Error: ${error.message}. Please try again.` 
+            });
+            return newMsgs;
+        });
     } finally {
         setIsTyping(false);
     }
   };
-
-  const displayMessages = messages.map((msg, index) => {
-    const isRecent = (Date.now() - (msg.timestamp || Date.now())) < 10000;
-    const shouldAnimate = msg.sender === 'bot' && isRecent && (index === messages.length - 1);
-    return { ...msg, shouldAnimate };
-  });
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#FAF3E0] relative">
@@ -431,23 +441,15 @@ function DebtAI() {
         )}
 
         <div className="flex-1 overflow-y-auto p-4 pb-44 flex flex-col gap-4 pt-16 md:pt-4">
-          {displayMessages.map((msg, index) => {
+          {messages.map((msg, index) => {
             const isBot = msg.sender === "bot";
             return (
               <div key={index} className={`max-w-[90%] sm:max-w-[85%] p-4 rounded-2xl shadow-sm ${!isBot ? "bg-purple-700 text-white self-end rounded-br-none" : "bg-white/90 backdrop-blur-sm self-start rounded-bl-none border border-white/50"}`}>
-                {!isBot ? <div className="whitespace-pre-wrap break-words">{msg.text}</div> : <BotMessage text={msg.text} shouldAnimate={msg.shouldAnimate} />}
+                {!isBot ? <div className="whitespace-pre-wrap break-words">{msg.text}</div> : <BotMessage text={msg.text} />}
               </div>
             );
           })}
-          {isTyping && (
-             <div className="bg-white/50 backdrop-blur-sm self-start rounded-2xl rounded-bl-none p-4 shadow-sm animate-pulse">
-                <div className="flex gap-1 items-center">
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-75"></div>
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></div>
-                </div>
-             </div>
-          )}
+          
           <div ref={messagesEndRef} />
         </div>
 
