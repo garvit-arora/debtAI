@@ -27,6 +27,10 @@ input[type="submit"],
 .cream{
     background-color: var(--background--cream);
 }
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .gray-border{
     border:1px solid #b2abab,
 }

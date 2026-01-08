@@ -23,11 +23,11 @@ import {
   ArrowRight,
   PieChart as PieIcon,
   Activity,
-  Menu, // Added for mobile
-  X     // Added for mobile
+  Menu, 
+  X
 } from "lucide-react";
 
-// CHANGED: w-48 -> w-full sm:w-48 (Full width on mobile, fixed on desktop)
+// Quick Action Buttons
 const quickActionStyle =
   "relative h-16 w-full sm:w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
 
@@ -40,7 +40,7 @@ function Dashboard() {
   const [isScanning, setIsScanning] = useState(false);
   const [chart2Range, setChart2Range] = useState("Monthly");
   
-  // NEW: Mobile Sidebar State
+  // Mobile Sidebar State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // AI Habit State
@@ -67,14 +67,10 @@ function Dashboard() {
            if (snapshot.exists()) {
              const data = snapshot.val();
              
-             // --- NEW: CHECK IF SUBSCRIPTION EXPIRED ---
+             // Check if subscription expired
              const now = Date.now();
              if (data.isPremium === true && data.premiumExpiry && now > data.premiumExpiry) {
-                 console.log("Subscription expired. Downgrading to free.");
-                 update(userRef, { 
-                     isPremium: false, 
-                     plan: "expired" 
-                 });
+                 update(userRef, { isPremium: false, plan: "expired" });
                  setUserData({ ...data, isPremium: false });
              } else {
                  setUserData(data);
@@ -95,7 +91,7 @@ function Dashboard() {
     return () => unsubscribe();
   }, [auth, navigate, db]);
 
-  // 2. REAL AI HABIT GENERATION
+  // 2. AI HABIT GENERATION
   useEffect(() => {
     const fetchAIHabits = async () => {
         if (!user) return;
@@ -115,7 +111,7 @@ function Dashboard() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    prompt: "Generate 3 distinct, actionable, short financial micro-habits for today. Strictly return them separated by a pipe symbol (|). Example: Check balance|Skip coffee|Cook dinner.",
+                    prompt: "Generate 3 distinct, actionable, short financial micro-habits for today. Strictly return them separated by a pipe symbol (|).",
                     userData: userData || {} 
                 })
             });
@@ -143,18 +139,6 @@ function Dashboard() {
   };
 
   // --- DATA HELPERS ---
-  const getDebtFreeDate = () => {
-    if (!userData || !userData.debts) return "Calculating...";
-    const debtsArray = Object.values(userData.debts).filter(d => d.status !== 'paid');
-    const totalDebt = debtsArray.reduce((sum, debt) => sum + (parseFloat(debt.amount) || 0), 0);
-    const disposableIncome = (userData.income - userData.expenses);
-    if (disposableIncome <= 0) return "Unknown";
-    const monthsToFreedom = Math.ceil(totalDebt / disposableIncome);
-    const date = new Date();
-    date.setMonth(date.getMonth() + monthsToFreedom);
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  };
-
   const getUrgentDebt = () => {
     if (!userData || !userData.debts) return null;
     const debtsArray = Object.entries(userData.debts)
@@ -293,43 +277,60 @@ function Dashboard() {
         </div>
       )}
 
-      {/* --- NEW: MOBILE SIDEBAR OVERLAY & DRAWER --- */}
-      {/* 1. Backdrop for mobile */}
+      {/* --- SIDEBAR LOGIC --- */}
+      
+      {/* 1. Mobile Sidebar (Drawer with Transform) - ONLY visible on mobile */}
+      {/* The background overlay */}
       {isMobileMenuOpen && (
         <div 
             className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
-
-      {/* 2. Sidebar Container (Slide-out on mobile, Fixed on Desktop) */}
-      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-white md:bg-transparent shadow-2xl md:shadow-none transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:block ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        {/* Close Button for Mobile */}
+      
+      {/* The sliding drawer */}
+      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <button 
             onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute top-4 right-4 p-2 text-stone-500 hover:bg-stone-100 rounded-full md:hidden"
+            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
         >
             <X size={24} />
         </button>
         <Sidebar />
       </div>
 
-      {/* CHANGED: Main container padding (p-4 mobile, p-12 desktop) */}
-      <main className="flex-1 p-4 md:p-12 overflow-y-auto w-full">
+      {/* 2. Desktop Sidebar (Fixed Position) - ONLY visible on Desktop */}
+      {/* This renders OUTSIDE the transform container, ensuring 'fixed' works correctly */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-12 overflow-y-auto w-full md:ml-28">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           
           <div className="lg:col-span-2 flex flex-col gap-8">
             <div className="flex items-start justify-between">
                 <div>
-                    {/* NEW: Mobile Hamburger Trigger */}
-                    <div className="flex items-center gap-3 mb-2 md:mb-0">
-                        <button 
-                            onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden"
-                        >
-                            <Menu size={28} />
-                        </button>
-                        <h1 className="text-3xl md:text-6xl font-bold text-[#5B2D2D]">Let's Start <br className="hidden md:block"/> Strong!</h1>
+                    {/* Header with Hamburger */}
+                    <div className="flex items-center justify-between w-full md:justify-start gap-4 mb-2 md:mb-0">
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => setIsMobileMenuOpen(true)}
+                                className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden"
+                            >
+                                <Menu size={28} />
+                            </button>
+                            <h1 className="text-3xl md:text-6xl font-bold text-[#5B2D2D]">Let's Start <br className="hidden md:block"/> Strong!</h1>
+                        </div>
+
+                         {/* Mobile Profile Button (Circular, Top Right) */}
+                         <div className="md:hidden flex items-center gap-2">
+                             {!isPremium && <div onClick={() => setShowPricingModal(true)} className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-sm animate-pulse"><Zap size={14} fill="currentColor"/></div>}
+                             <button onClick={() => navigate("/profile")} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#5B2D2D] border border-stone-100">
+                                <User size={20} />
+                             </button>
+                         </div>
                     </div>
                     <p className="text-[#30302e] opacity-70 mt-1">
                         Hello, {userData?.name || "User"}. {isPremium && <span className="inline-flex items-center gap-1 bg-[#5B2D2D] text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider ml-2"><Crown size={10} /> PRO</span>}
@@ -337,7 +338,7 @@ function Dashboard() {
                 </div>
             </div>
 
-            {/* CHANGED: Flex wrap logic for buttons */}
+            {/* Quick Actions */}
             <div className="flex flex-col sm:flex-row gap-4 w-full">
               <button onClick={() => setShowExpenseModal(true)} className={quickActionStyle}>
                 <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-800 rounded-[24px]`}>{<Plus />}</div>
@@ -350,6 +351,7 @@ function Dashboard() {
               </label>
             </div>
 
+            {/* Monthly Budget Card */}
             <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[30px] shadow-sm border border-white/40">
               <div className="flex justify-between items-end mb-4">
                 <div><h3 className="text-lg md:text-xl font-bold text-[#5B2D2D]">Monthly Budget</h3><p className="text-xs md:text-sm text-stone-500">You've spent {Math.round((userData?.expenses / userData?.income) * 100) || 0}%</p></div>
@@ -361,13 +363,15 @@ function Dashboard() {
           </div>
 
           <div className="flex flex-col gap-6 h-full">
-            <div className="flex justify-end gap-3 flex-wrap md:flex-nowrap">
+            {/* Desktop Profile & Upgrade Buttons (Hidden on Mobile) */}
+            <div className="hidden md:flex justify-end gap-3">
                 {!isPremium && (
-                    <button onClick={() => setShowPricingModal(true)} className=" cursor-pointer flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse duration-[2000ms] border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm whitespace-nowrap">Upgrade PRO</span></button>
+                    <button onClick={() => setShowPricingModal(true)} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm whitespace-nowrap">Upgrade PRO</span></button>
                 )}
-                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 cursor-pointer px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40 flex-1 md:flex-none justify-center"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="">Profile</span></button>
+                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 cursor-pointer px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="">Profile</span></button>
             </div>
 
+            {/* DebtAI Card */}
             <div onClick={() => navigate('/debtai')} className="relative group cursor-pointer h-full min-h-[200px] md:min-h-[250px]">
               <div className="absolute inset-0 bg-gradient-to-br from-[#30302e] to-[#141414] rounded-[35px] p-6 md:p-8 flex flex-col justify-between shadow-xl transition-transform duration-500 group-hover:scale-[1.02]">
                 <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><span className="text-[#f8ecdd] text-sm font-medium tracking-widest uppercase">DebtAI Assistant</span></div>
@@ -434,7 +438,6 @@ function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Chart 1: SVG Trend */}
             <div className="bg-white py-6 px-4 md:px-10 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col relative z-0 overflow-visible">
               <h4 className="text-stone-500 font-bold text-sm mb-6">Weekly Spending Trend</h4>
               <div className="flex-1 relative w-full mb-6 z-0">
@@ -449,7 +452,6 @@ function Dashboard() {
                     <div key={i} className="absolute group z-10 w-10 h-10 flex items-center justify-center cursor-pointer -translate-x-1/2 translate-y-1/2" style={{ left: `${leftPos}%`, bottom: `${bottomPos}%` }}>
                       <div className="absolute w-full h-full bg-emerald-500/20 rounded-full scale-50 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"></div>
                       <div className="relative z-10 w-3 h-3 bg-emerald-500 rounded-full border-[1px] border-white shadow-[0_2px_5px_rgba(16,185,129,0.3)] transition-all duration-300 group-hover:scale-125 group-hover:bg-emerald-600"></div>
-                      {/* Tooltip hidden on mobile usually, displayed on hover */}
                       <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
                         <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">${d.amount.toFixed(0)}</div>
                         <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>
@@ -459,8 +461,7 @@ function Dashboard() {
                 })}
               </div>
             </div>
-
-            {/* Chart 2: Expense List */}  
+            
             <div className="bg-white p-6 rounded-[30px] min-h-[16rem] shadow-sm border border-stone-100">
               <div className="flex justify-between items-center mb-4"><h4 className="text-stone-500 font-bold text-sm">Category Breakdown</h4></div>
               <div className="space-y-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
@@ -478,14 +479,12 @@ function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Premium Chart 1: Debt Distribution (Pie) */}
                 <div onClick={() => !isPremium && setShowPricingModal(true)} className={`bg-white p-6 rounded-[30px] h-72 shadow-sm border border-stone-100 relative overflow-hidden ${!isPremium ? 'cursor-pointer group' : ''}`}>
                     <h4 className="text-stone-500 font-bold text-sm mb-4 flex items-center gap-2"><PieIcon size={16}/> Debt Distribution</h4>
                     
                     {isPremium ? (
                         debtDistribution.length > 0 ? (
                             <div className="flex items-center justify-center h-48 gap-4 md:gap-8">
-                                {/* Simple CSS Pie Chart */}
                                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full relative bg-stone-100 shrink-0" style={{ background: `conic-gradient(
                                     #ef4444 0% ${debtDistribution[0]?.percent || 0}%, 
                                     #f97316 ${debtDistribution[0]?.percent || 0}% ${(debtDistribution[0]?.percent || 0) + (debtDistribution[1]?.percent || 0)}%,
@@ -511,7 +510,6 @@ function Dashboard() {
                     )}
                 </div>
 
-                {/* Premium Chart 2: Health Score */}
                 <div onClick={() => !isPremium && setShowPricingModal(true)} className={`bg-white p-6 rounded-[30px] h-72 shadow-sm border border-stone-100 relative overflow-hidden ${!isPremium ? 'cursor-pointer group' : ''}`}>
                     <h4 className="text-stone-500 font-bold text-sm mb-4 flex items-center gap-2"><Activity size={16}/> Financial Health Score</h4>
                     
