@@ -214,7 +214,7 @@ function Dashboard() {
 
     return Object.keys(grouped).map(cat => ({
       label: cat,
-      amount: `$${grouped[cat].toFixed(0)}`,
+      amount: `₹${grouped[cat].toFixed(0)}`,
       percent: `${Math.round((grouped[cat] / total) * 100)}%`,
       color: colors[cat] || "bg-stone-400",
       rawPercent: (grouped[cat] / total) * 100 // for width
@@ -316,13 +316,13 @@ function Dashboard() {
                 {/* Colored fill bar with width 45% */}
                 <div 
                   className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-1000"
-                  style={{ width: `${Math.min((userData?.expenses / userData?.income) * 100, 100)}%` }}
+                  style={{ width: `₹{Math.min((userData?.expenses / userData?.income) * 100, 100)}%` }}
                 ></div>
               </div>
 
               <div className="flex justify-between mt-2 text-sm font-bold text-stone-600">
-                <span>${userData?.expenses || 0} spent</span>
-                <span>${userData?.income || 0} limit</span>
+                <span>₹{userData?.expenses || 0} spent</span>
+                <span>₹{userData?.income || 0} limit</span>
               </div>
             </div>
           </div>
@@ -354,7 +354,7 @@ function Dashboard() {
                 <div className="space-y-4">
                   <h2 className="text-3xl text-white font-light">
                     "How can I save{" "}
-                    <span className="text-emerald-400 font-bold">$200</span> on
+                    <span className="text-emerald-400 font-bold">₹1000</span> on
                     groceries this week?"
                   </h2>
                   <p className="text-stone-400 text-sm">
@@ -411,7 +411,7 @@ function Dashboard() {
                    {/* DYNAMIC URGENT DEBT INFO */}
                    <h4 className="font-bold text-[#5B2D2D]">{urgentDebt.name} Payment</h4>
                    <p className="text-sm text-stone-500">
-                     Estimated Min Pay: ${urgentDebt.estimatedMinPayment}. Stress Level: {urgentDebt.stress}/10.
+                     Estimated Min Pay: ₹{urgentDebt.estimatedMinPayment}. Stress Level: {urgentDebt.stress}/10.
                    </p>
                  </div>
                </div>
@@ -540,7 +540,7 @@ function Dashboard() {
                       {/* The Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
                         <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">
-                          ${d.amount.toFixed(0)}
+                          ₹{d.amount.toFixed(0)}
                         </div>
                         {/* Little triangle arrow */}
                         <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>

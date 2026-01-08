@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { getDatabase, ref, push, runTransaction } from "firebase/database";
 import { getAuth } from "firebase/auth";
-import { app } from "../../firebase"; // Ensure path is correct
+import { app } from "../../firebase"; 
 
 const ExpenseInputForm = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -80,7 +80,7 @@ const ExpenseInputForm = ({ onClose }) => {
             <div>
               <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1 block">Amount</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-lg">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-lg">₹</span>
                 <input 
                   type="number" 
                   name="amount"

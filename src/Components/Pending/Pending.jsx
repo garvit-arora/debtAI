@@ -213,7 +213,7 @@ const PendingDebts = () => {
 
                   <div className="mb-6">
                     <h3 className="text-2xl font-bold text-stone-900 mb-1">{debt.name}</h3>
-                    <p className="text-4xl font-light text-stone-600 tracking-tighter">${parseFloat(debt.amount).toLocaleString()}</p>
+                    <p className="text-4xl font-light text-stone-600 tracking-tighter">₹{parseFloat(debt.amount).toLocaleString()}</p>
                     <p className="text-sm text-stone-400 mt-2">Due: {new Date(debt.dueDate).toLocaleDateString()}</p>
                   </div>
 
@@ -259,7 +259,7 @@ const PendingDebts = () => {
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1">Amount ($)</label>
+                  <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1">Amount (₹)</label>
                   <input 
                     type="number" 
                     value={formData.amount}
