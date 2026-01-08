@@ -29,7 +29,8 @@ import {
   Loader2,
   Trash2,
   TrendingDown,
-  Clock
+  Clock,
+  Menu // Added Menu Icon
 } from "lucide-react";
 
 const CalendarPage = () => {
@@ -39,6 +40,9 @@ const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [user, setUser] = useState(null);
   
+  // Mobile Sidebar State (Added)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [debts, setDebts] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,13 +134,23 @@ const CalendarPage = () => {
   const renderHeader = () => {
     return (
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-[#5B2D2D]">Financial Calendar</h1>
-          <p className="text-[#5B2D2D]/70 mt-1">Manage your EMIs, dues, and cuts.</p>
+        <div className="flex items-center gap-3">
+          {/* Hamburger Button (Added) */}
+          <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden mt-1"
+          >
+              <Menu size={28} />
+          </button>
+          
+          <div>
+            <h1 className="text-4xl font-bold text-[#5B2D2D]">Financial Calendar</h1>
+            <p className="text-[#5B2D2D]/70 mt-1">Manage your EMIs, dues, and cuts.</p>
+          </div>
         </div>
         
         {/* Month Navigator */}
-        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-stone-100">
+        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-stone-100 self-end md:self-auto">
           <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-stone-100 rounded-full text-[#5B2D2D]">
             <ChevronLeft size={24} />
           </button>
@@ -287,9 +301,34 @@ const CalendarPage = () => {
 
   return (
     <div className="flex min-h-screen bg-[#f8ecdd] font-sans relative">
-      <div className="z-50"><Sidebar /></div>
       
-      <main className="flex-1 ml-0 md:ml-28 p-6 md:p-12 overflow-y-auto">
+      {/* --- SIDEBAR LOGIC --- */}
+      
+      {/* 1. Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* 2. Mobile Drawer */}
+      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
+        >
+            <X size={24} />
+        </button>
+        <Sidebar />
+      </div>
+
+      {/* 3. Desktop Sidebar (Fixed) */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+      
+      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto w-full">
         {renderHeader()}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

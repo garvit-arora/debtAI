@@ -14,7 +14,8 @@ import {
   Zap,
   TrendingDown,
   DollarSign,
-  Trash2
+  Trash2,
+  Menu // Added Menu icon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -25,6 +26,9 @@ const PendingDebts = () => {
   
   // Payoff Simulator State
   const [extraPayment, setExtraPayment] = useState(0);
+
+  // Mobile Sidebar State (Added)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -163,22 +167,56 @@ const PendingDebts = () => {
 
   return (
     <div className="flex min-h-screen bg-[#f8ecdd] font-sans relative">
-      <div className="z-50 hidden md:block">
+      
+      {/* --- SIDEBAR LOGIC --- */}
+      
+      {/* 1. Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* 2. Mobile Drawer */}
+      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
+        >
+            <X size={24} />
+        </button>
         <Sidebar />
       </div>
 
-      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto">
+      {/* 3. Desktop Sidebar (Fixed) */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto w-full">
         <div className="max-w-5xl mx-auto">
           
           {/* HEADER */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-[#5B2D2D] mb-2">Debt Tracker</h1>
-              <p className="text-[#5B2D2D]/70 text-lg">Organize, visualize, and eliminate your liabilities.</p>
+            <div className="flex items-start gap-3">
+              {/* Hamburger Button */}
+              <button 
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden mt-1"
+              >
+                  <Menu size={28} />
+              </button>
+
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-[#5B2D2D] mb-2">Debt Tracker</h1>
+                <p className="text-[#5B2D2D]/70 text-lg">Organize, visualize, and eliminate your liabilities.</p>
+              </div>
             </div>
+
             <button 
               onClick={() => handleOpenModal()}
-              className="flex items-center gap-2 bg-[#5B2D2D] text-[#f8ecdd] px-6 py-3 rounded-full font-bold hover:scale-105 hover:shadow-lg transition-all"
+              className="flex items-center gap-2 bg-[#5B2D2D] text-[#f8ecdd] px-6 py-3 rounded-full font-bold hover:scale-105 hover:shadow-lg transition-all w-full md:w-auto justify-center"
             >
               <Plus size={20} /> Add New Debt
             </button>

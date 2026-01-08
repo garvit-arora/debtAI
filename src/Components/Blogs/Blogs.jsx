@@ -18,7 +18,9 @@ import {
   FileText,
   Coffee,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  Menu, // Added Menu Icon
+  X // Added X Icon
 } from "lucide-react";
 
 // --- UPDATED BLOG CONTENT WITH AI SUGGESTIONS ---
@@ -42,7 +44,6 @@ const BLOG_DATA = [
         <p className="text-xl font-medium text-[#5B2D2D]">
           Your credit score isn't just a number—it's a key that unlocks lower interest rates, better housing options, and even job opportunities.
         </p>
-        [Image of credit score factors pie chart FICO]
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">What Actually Makes Up Your Score?</h3>
         <p>FICO and VantageScore use slightly different models, but the core components remain consistent.</p>
         <ul className="list-disc pl-5 space-y-2">
@@ -81,7 +82,6 @@ const BLOG_DATA = [
         <p className="text-xl font-medium text-[#5B2D2D]">
           A budget is simply telling your money where to go instead of wondering where it went.
         </p>
-        [Image of 50 30 20 budget rule diagram]
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The 50/30/20 Rule</h3>
         <ul className="list-disc pl-5 space-y-2">
           <li><strong>50% Needs:</strong> Housing, utilities, groceries.</li>
@@ -118,7 +118,6 @@ const BLOG_DATA = [
         <p className="text-xl font-medium text-[#5B2D2D]">
           Who gets paid first? The answer depends on whether you are motivated by math or by emotion.
         </p>
-        [Image of debt snowball vs avalanche method visual]
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The Debt Snowball (Psychology)</h3>
         <p>List debts smallest to largest. Pay minimums on all, attack the smallest. The quick wins release dopamine and keep you motivated.</p>
 
@@ -173,7 +172,6 @@ const BLOG_DATA = [
         <p className="text-xl font-medium text-[#5B2D2D]">
           Investing is the only way to beat inflation. It is not about picking stocks; it's about buying the economy.
         </p>
-        [Image of compound interest graph over time]
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Vocabulary</h3>
         <ul className="list-disc pl-5 space-y-2">
           <li><strong>Stock:</strong> Ownership in a company.</li>
@@ -307,6 +305,9 @@ const BLOG_DATA = [
 export default function Blogs() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const navigate = useNavigate();
+  
+  // Mobile Sidebar State (Added)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleOpenBlog = (blog) => {
     setSelectedBlog(blog);
@@ -325,21 +326,56 @@ export default function Blogs() {
 
   return (
     <div className="flex min-h-screen bg-[#f8ecdd] font-sans relative">
-      <div className="z-50 hidden md:block">
+      
+      {/* --- SIDEBAR LOGIC --- */}
+      
+      {/* 1. Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* 2. Mobile Drawer */}
+      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
+        >
+            <X size={24} />
+        </button>
         <Sidebar />
       </div>
 
-      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto">
+      {/* 3. Desktop Sidebar (Fixed) */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto w-full">
         <div className="max-w-6xl mx-auto">
           
-          {!selectedBlog && (
-            <div className="mb-12 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold text-[#5B2D2D] mb-4">Financial Insights</h1>
-              <p className="text-[#5B2D2D]/70 text-lg max-w-2xl">
-                Deep dives into credit, investing, and wealth building.
-              </p>
-            </div>
-          )}
+          {/* Header Row (Hamburger + Title) */}
+          <div className="flex items-center gap-4 mb-4 md:mb-0">
+             <button 
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden"
+              >
+                  <Menu size={28} />
+             </button>
+             
+             {!selectedBlog && (
+                <div className="text-left">
+                  <h1 className="text-3xl md:text-5xl font-bold text-[#5B2D2D] mb-2">Financial Insights</h1>
+                  <p className="text-[#5B2D2D]/70 text-sm md:text-lg max-w-2xl hidden sm:block">
+                    Deep dives into credit, investing, and wealth building.
+                  </p>
+                </div>
+              )}
+          </div>
+          {/* Mobile only subtitle */}
+          {!selectedBlog && <p className="text-[#5B2D2D]/70 text-sm mb-8 sm:hidden">Deep dives into credit, investing, and wealth building.</p>}
 
           {selectedBlog ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
