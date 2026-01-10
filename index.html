@@ -2,38 +2,75 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/icons/main.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/logo192.png" />
-    <meta name="theme-color" content="#000000" />
-    <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DebtAI | Smart Debt Management & Financial Freedom</title>
-<meta name="description" content="Take control of your finances with DebtAI. No middlemen, no gatekeepers—just direct ownership and smart tools to manage your debts effectively." />
-<meta name="keywords" content="debt management, AI finance, financial freedom, decentralized finance, debt tracker, DebtAI" />
-<meta name="author" content="DebtAI Team" />
-<meta name="robots" content="index, follow" />
-<link rel="canonical" href="https://debtai.in/" />
-<meta name="google-site-verification" content="xh8DrGrZK51--YP5puCyuPAooJMu4_TOOSj-yNkpss4" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://debtai.in/" />
-<meta property="og:title" content="DebtAI | Smart Debt Management" />
-<meta property="og:description" content="Manage your debts with AI. Simple, transparent, and user-owned financial tools." />
-<meta property="og:image" content="https://debtai.in/main.png" /> <meta property="og:site_name" content="DebtAI" />
-<meta property="og:locale" content="en_IN" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:url" content="https://debtai.in/" />
-<meta name="twitter:title" content="DebtAI | Smart Debt Management" />
-<meta name="twitter:description" content="Manage your debts with AI. Simple, transparent, and user-owned financial tools." />
-<meta name="twitter:image" content="https://debtai.in/main.png" /> <meta name="theme-color" content="#000000" /> <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-<link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Asimovian&family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Caprasimo&family=Cedarville+Cursive&family=Edu+NSW+ACT+Cursive:wght@400..700&family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Istok+Web:ital,wght@0,400;0,700;1,400;1,700&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=National+Park:wght@200..800&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Pacifico&family=Paprika&family=Permanent+Marker&family=Playwrite+DE+SAS:wght@100..400&family=Sahitya:wght@400;700&display=swap" rel="stylesheet">
-    <title>DebtAI</title>
+    <!-- Title & SEO -->
+    <title>DebtAI | Smart Debt Management & Financial Freedom</title>
+    <meta
+      name="description"
+      content="Take control of your finances with DebtAI. No middlemen, no gatekeepers—just smart AI-powered debt management tools."
+    />
+    <meta
+      name="keywords"
+      content="debt management, AI finance, financial freedom, debt tracker, DebtAI"
+    />
+    <meta name="author" content="DebtAI Team" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://debtai.in/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/main.png" />
+    <link rel="apple-touch-icon" href="/main.png" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- Google Site Verification -->
+    <meta name="google-site-verification" content="3oDE9jljtX6L1cqdU9UMgLfKjCOktntbTXwOogPHetc" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://debtai.in/" />
+    <meta property="og:title" content="DebtAI | Smart Debt Management" />
+    <meta
+      property="og:description"
+      content="Manage your debts with AI. Simple, transparent, and user-owned financial tools."
+    />
+    <meta property="og:image" content="https://debtai.in/main.png" />
+    <meta property="og:site_name" content="DebtAI" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://debtai.in/" />
+    <meta name="twitter:title" content="DebtAI | Smart Debt Management" />
+    <meta
+      name="twitter:description"
+      content="Manage your debts with AI. Simple, transparent, and user-owned financial tools."
+    />
+    <meta name="twitter:image" content="https://debtai.in/main.png" />
+
+    <!-- Organization Schema (THIS MAKES GOOGLE SHOW LOGO) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "DebtAI",
+        "url": "https://debtai.in/",
+        "logo": "https://debtai.in/main.png"
+      }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Open+Sans:wght@300..800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
