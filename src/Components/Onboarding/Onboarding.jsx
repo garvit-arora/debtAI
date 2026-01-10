@@ -214,7 +214,8 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-start pt-24 gap-12 bg-[#FAF3E0] text-gray-900 font-sans overflow-hidden px-4">
+    // FIX 1: Adjusted padding-top (pt-12 md:pt-24) and gap (gap-8 md:gap-12) to pull content up
+    <div className="h-screen w-full flex flex-col items-center justify-start pt-12 md:pt-24 gap-8 md:gap-12 bg-[#FAF3E0] text-gray-900 font-sans overflow-hidden px-4">
       
       <div className="w-full max-w-xl h-2 bg-gray-200 rounded-full overflow-hidden">
         <div ref={progressRef} className="h-full bg-black rounded-full w-0"></div>
@@ -271,10 +272,11 @@ export default function Onboarding() {
 
           {/* TERMS & CONDITIONS PHASE */}
           {phase === 4 && (
-            <div className="w-full opacity-0 flex flex-col gap-6">
+            // FIX 2: Reduced gap-6 to gap-3
+            <div className="w-full opacity-0 flex flex-col gap-3">
                 
-                {/* Scrollable Terms Container */}
-                <div className="w-full h-96 bg-white/90 p-6 rounded-xl border border-gray-300 overflow-y-auto text-sm text-gray-700 shadow-inner leading-relaxed">
+                {/* FIX 3: Reduced fixed height to allow space for button (h-64 md:h-80) */}
+                <div className="w-full h-64 md:h-80 bg-white/90 p-5 rounded-xl border border-gray-300 overflow-y-auto text-sm text-gray-700 shadow-inner leading-relaxed">
                     
                     <h3 className="font-bold text-gray-900 mb-2 uppercase text-xs tracking-wider">Last Updated: {new Date().toLocaleDateString()}</h3>
                     
@@ -319,7 +321,7 @@ export default function Onboarding() {
                     <p className="mb-4">
                         These Terms shall be governed and construed in accordance with the laws of the jurisdiction in which the company is established, without regard to its conflict of law provisions.
                     </p>
-
+                  <h4 className="font-bold text-gray-900 mt-4 mb-1">Read More <a className="text-blue-500 underline" href="/legal">Here</a> </h4>
                     <p className="mt-8 italic text-xs text-gray-500 border-t pt-4">
                         By clicking "Agree & Create Account", you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.
                     </p>

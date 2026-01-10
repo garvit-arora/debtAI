@@ -11,7 +11,7 @@
 
 }
 *{
-   cursor: url('/public/cursor.svg'),auto !important;
+   /* cursor: url('/public/cursor.svg'),auto !important; */
 }
 
 html {
@@ -22,11 +22,15 @@ a,
 button, 
 input[type="submit"], 
 .clickable {
-  cursor: url('/public/pointer.svg'), pointer !important;
+  /* cursor: url('/public/pointer.svg'), pointer !important; */
 }
 .cream{
     background-color: var(--background--cream);
 }
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .gray-border{
     border:1px solid #b2abab,
 }

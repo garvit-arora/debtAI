@@ -105,7 +105,7 @@ const Footer = ({buttonText, actionLink}) => {
                       <ul className="space-y-4 text-lg font-medium text-stone-400">
                         <li>
                           <a
-                            href="#"
+                            href="#features"
                             className="hover:text-(--mint) transition-colors flex items-center gap-2 group"
                           >
                             Features{" "}
@@ -114,7 +114,7 @@ const Footer = ({buttonText, actionLink}) => {
                         </li>
                         <li>
                           <a
-                            href="#"
+                            href="/premium"
                             className="hover:text-(--mint) transition-colors"
                           >
                             Pricing
@@ -122,7 +122,7 @@ const Footer = ({buttonText, actionLink}) => {
                         </li>
                         <li>
                           <a
-                            href="#"
+                            href="#testimonials"
                             className="hover:text-(--mint) transition-colors"
                           >
                             Testimonials
@@ -130,7 +130,7 @@ const Footer = ({buttonText, actionLink}) => {
                         </li>
                         <li>
                           <a
-                            href="#"
+                            href="#team"
                             className="hover:text-(--mint) transition-colors"
                           >
                             Our Team
@@ -145,7 +145,7 @@ const Footer = ({buttonText, actionLink}) => {
                       <ul className="space-y-4 text-lg font-medium text-stone-400">
                         <li>
                           <a
-                            href="#"
+                            href="/"
                             className="hover:text-(--mint) transition-colors"
                           >
                             About Us
@@ -153,7 +153,7 @@ const Footer = ({buttonText, actionLink}) => {
                         </li>
                         <li>
                           <a
-                            href="#"
+                            href="/"
                             className="hover:text-(--mint) transition-colors"
                           >
                             Careers
@@ -161,20 +161,20 @@ const Footer = ({buttonText, actionLink}) => {
                         </li>
                         <li>
                           <a
-                            href="#"
+                            href="/legal"
                             className="hover:text-(--mint) transition-colors"
                           >
-                            Privacy Policy
+                            Privacy & Terms
                           </a>
                         </li>
-                        <li>
+                        {/* <li>
                           <a
                             href="#"
                             className="hover:text-(--mint) transition-colors"
                           >
-                            Terms of Service
+                            
                           </a>
-                        </li>
+                        </li> */}
                       </ul>
                     </div>
                   </div>
@@ -198,8 +198,8 @@ const Footer = ({buttonText, actionLink}) => {
                   </div>
       
                   <div className="flex gap-6">
-                    <SocialLink icon={<BsTwitter />} href="#" />
-                    <SocialLink icon={<BsLinkedin />} href="#" />
+                    <SocialLink icon={<BsTwitter />} href="https://www.x.com/debtaiofficial" />
+                    <SocialLink icon={<BsLinkedin />} href="https://www.linkedin.com/company/debtai/" />
                     <SocialLink icon={<BsInstagram />} href="#" />
                   </div>
                 </div>
