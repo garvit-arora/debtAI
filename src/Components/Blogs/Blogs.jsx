@@ -56,7 +56,7 @@ const BLOG_DATA = [
 
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Actionable Strategies</h3>
         <h4 className="text-xl font-bold text-[#5B2D2D] mt-4">1. The 'Azul' Method</h4>
-        <p>Pay off your balance <strong>3 days before</strong> the statement closes. This forces the issuer to report a $0 balance (0% utilization) to bureaus.</p>
+        <p>Pay off your balance <strong>3 days before</strong> the statement closes. This forces the issuer to report a ₹0 balance (0% utilization) to bureaus.</p>
 
         <h4 className="text-xl font-bold text-[#5B2D2D] mt-4">2. Become an Authorized User</h4>
         <p>Piggyback off a parent or partner's good credit history by getting added to their card.</p>
@@ -73,7 +73,7 @@ const BLOG_DATA = [
     date: "Jan 6, 2026",
     readTime: "6 min read",
     questions: [
-      "Create a 50/30/20 budget for a $4,000 monthly income.",
+      "Create a 50/30/20 budget for a ₹4,000 monthly income.",
       "What are some examples of Sinking Funds I should have?",
       "How do I do Zero-Based budgeting if my income varies?"
     ],
@@ -109,7 +109,7 @@ const BLOG_DATA = [
     date: "Jan 5, 2026",
     readTime: "10 min read",
     questions: [
-      "Simulate a Debt Snowball for 3 debts: $500, $2000, $5000.",
+      "Simulate a Debt Snowball for 3 debts: ₹5000, ₹20000, ₹50000.",
       "Why does the Avalanche method save more money?",
       "Can I switch from Snowball to Avalanche halfway through?"
     ],
@@ -137,16 +137,16 @@ const BLOG_DATA = [
     readTime: "5 min read",
     questions: [
       "Where can I find high-yield savings accounts?",
-      "Is $1,000 enough for a starter emergency fund?",
+      "Is ₹1,000 enough for a starter emergency fund?",
       "Should I invest my emergency fund in stocks?"
     ],
     content: (
       <div className="space-y-6 text-stone-700 leading-relaxed">
         <p className="text-xl font-medium text-[#5B2D2D]">
-          60% of people cannot cover a $1,000 emergency. This is the "Debt Trap."
+          60% of people cannot cover a ₹50,000 emergency. This is the "Debt Trap."
         </p>
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Phase 1: The Starter Fund</h3>
-        <p>Save $1,000 to $2,000 immediately. Keep it in a separate bank account.</p>
+        <p>Save ₹10,000 to ₹20,000 immediately. Keep it in a separate bank account.</p>
 
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Phase 2: 3-6 Months</h3>
         <p>Once debt is gone, build a fund that covers 3-6 months of essential living expenses.</p>
@@ -164,7 +164,7 @@ const BLOG_DATA = [
     readTime: "12 min read",
     questions: [
       "Explain what an ETF is like I'm 5 years old.",
-      "Calculate compound interest on $500/month for 30 years.",
+      "Calculate compound interest on ₹25,000/month for 30 years.",
       "What is the S&P 500?"
     ],
     content: (
@@ -178,7 +178,7 @@ const BLOG_DATA = [
           <li><strong>ETF:</strong> A basket of hundreds of stocks (safer).</li>
         </ul>
         <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Compound Interest</h3>
-        <p>Investing $500/month starting at age 25 results in $1.7 Million by age 65 (assuming 8% return).</p>
+        <p>Investing ₹25,000/month starting at age 25 results in ₹77.2 Million by age 65 (assuming 8% return).</p>
       </div>
     )
   },
@@ -218,7 +218,7 @@ const BLOG_DATA = [
     date: "Jan 1, 2026",
     readTime: "7 min read",
     questions: [
-      "List 5 side hustles with $0 startup cost.",
+      "List 5 side hustles with ₹0 startup cost.",
       "How can I sell digital products?",
       "What is 'Service Arbitrage'?"
     ],

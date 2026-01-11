@@ -204,7 +204,7 @@ function Dashboard() {
     }, {});
     const colors = { "Food": "bg-emerald-500", "Rent": "bg-[#30302e]", "Transport": "bg-blue-500", "Entertainment": "bg-orange-400", "Others": "bg-stone-400", "Scanned Bill": "bg-purple-500" };
     return Object.keys(grouped).map(cat => ({
-      label: cat, amount: `$${grouped[cat].toFixed(0)}`, percent: `${Math.round((grouped[cat] / total) * 100)}%`, color: colors[cat] || "bg-stone-400", rawPercent: (grouped[cat] / total) * 100 
+      label: cat, amount: `₹${grouped[cat].toFixed(0)}`, percent: `${Math.round((grouped[cat] / total) * 100)}%`, color: colors[cat] || "bg-stone-400", rawPercent: (grouped[cat] / total) * 100 
     })).sort((a,b) => b.rawPercent - a.rawPercent);
   };
   const categoryData = getCategoryBreakdown();
@@ -236,7 +236,7 @@ function Dashboard() {
         if (!response.ok) throw new Error(`Azure API Error: ${response.status}`);
         const data = await response.json();
         const detectedAmount = extractAmountFromOCR(data);
-        if (detectedAmount) { await saveBillToFirebase(detectedAmount); alert(`Success! Scanned bill for $${detectedAmount}`); } 
+        if (detectedAmount) { await saveBillToFirebase(detectedAmount); alert(`Success! Scanned bill for ₹${detectedAmount}`); } 
         else { alert("Could not detect a clear total amount."); }
     } catch (error) { console.error("Upload failed:", error); alert("Failed to upload bill."); } 
     finally { setIsScanning(false); }
@@ -386,7 +386,7 @@ function Dashboard() {
             <div onClick={() => navigate('/debtai')} className="relative group cursor-pointer h-full min-h-[200px] md:min-h-[250px]">
               <div className="absolute inset-0 bg-gradient-to-br from-[#30302e] to-[#141414] rounded-[35px] p-6 md:p-8 flex flex-col justify-between shadow-xl transition-transform duration-500 group-hover:scale-[1.02]">
                 <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><span className="text-[#f8ecdd] text-sm font-medium tracking-widest uppercase">DebtAI Assistant</span></div>
-                <div className="space-y-4"><h2 className="text-2xl md:text-3xl text-white font-light">"How can I save <span className="text-emerald-400 font-bold">$200</span>?"</h2><p className="text-stone-400 text-sm">Tap to chat with your financial data.</p></div>
+                <div className="space-y-4"><h2 className="text-2xl md:text-3xl text-white font-light">"How can I save <span className="text-emerald-400 font-bold">₹1500</span>?"</h2><p className="text-stone-400 text-sm">Tap to chat with your financial data.</p></div>
                 <div className="w-full h-12 bg-white/10 rounded-full flex items-center px-4 backdrop-blur-md border border-white/5"><span className="text-stone-400 text-sm">Ask anything...</span><div className="ml-auto w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black"><ArrowUpRight size={16} /></div></div>
               </div>
             </div>
@@ -464,7 +464,7 @@ function Dashboard() {
                       <div className="absolute w-full h-full bg-emerald-500/20 rounded-full scale-50 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"></div>
                       <div className="relative z-10 w-3 h-3 bg-emerald-500 rounded-full border-[1px] border-white shadow-[0_2px_5px_rgba(16,185,129,0.3)] transition-all duration-300 group-hover:scale-125 group-hover:bg-emerald-600"></div>
                       <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
-                        <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">${d.amount.toFixed(0)}</div>
+                        <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">₹{d.amount.toFixed(0)}</div>
                         <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>
                       </div>
                     </div>

@@ -229,7 +229,7 @@ const PendingDebts = () => {
                     <span className="text-stone-400 font-bold text-sm uppercase tracking-wider">Total Outstanding</span>
                     <div className="p-2 bg-red-50 text-red-500 rounded-full"><DollarSign size={20}/></div>
                 </div>
-                <div className="text-4xl font-bold text-[#5B2D2D]">${totalDebt.toLocaleString()}</div>
+                <div className="text-4xl font-bold text-[#5B2D2D]">₹{totalDebt.toLocaleString()}</div>
             </div>
 
             <div className="bg-white p-6 rounded-[30px] border border-stone-100 shadow-sm flex flex-col justify-between h-40">
@@ -257,7 +257,7 @@ const PendingDebts = () => {
                         onChange={(e) => setExtraPayment(Number(e.target.value))}
                         className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer mb-2 accent-yellow-400"
                     />
-                    <p className="text-xs text-white/50">Paying extra: <span className="text-white font-bold">${extraPayment}/mo</span></p>
+                    <p className="text-xs text-white/50">Paying extra: <span className="text-white font-bold">₹{extraPayment}/mo</span></p>
                 </div>
             </div>
           </div>
@@ -304,7 +304,7 @@ const PendingDebts = () => {
 
                                     <h3 className="text-2xl font-bold text-[#5B2D2D] mb-1">{debt.name}</h3>
                                     <div className="flex items-baseline gap-1 mb-4">
-                                        <span className="text-3xl font-light text-stone-700">${parseFloat(debt.amount).toLocaleString()}</span>
+                                        <span className="text-3xl font-light text-stone-700">₹{parseFloat(debt.amount).toLocaleString()}</span>
                                         <span className="text-sm text-stone-400">@ {debt.interestRate}% APR</span>
                                     </div>
 

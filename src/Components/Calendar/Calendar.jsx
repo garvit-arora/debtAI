@@ -221,7 +221,7 @@ const CalendarPage = () => {
                 <span className={`text-sm font-bold ${textClass}`}>{formattedDate}</span>
                 {dayEvents.length > 0 && (
                     <span className={`text-[10px] font-bold ${isToday ? "text-orange-200" : "text-stone-400"}`}>
-                        ${dayEvents.reduce((acc, curr) => acc + (parseFloat(curr.amount)||0), 0)}
+                        ₹{dayEvents.reduce((acc, curr) => acc + (parseFloat(curr.amount)||0), 0)}
                     </span>
                 )}
             </div>
@@ -340,7 +340,7 @@ const CalendarPage = () => {
             <div className="bg-gradient-to-r from-[#5B2D2D] to-[#422020] rounded-[24px] p-6 text-white shadow-lg flex justify-between items-center relative overflow-hidden">
                 <div className="relative z-10">
                     <p className="text-white/60 text-sm font-medium mb-1">Projected Outflow ({format(currentMonth, 'MMMM')})</p>
-                    <h2 className="text-4xl font-bold">${getMonthlyOutflow().toLocaleString()}</h2>
+                    <h2 className="text-4xl font-bold">₹{getMonthlyOutflow().toLocaleString()}</h2>
                 </div>
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm z-10">
                     <TrendingDown size={24} className="text-orange-200" />
@@ -399,7 +399,7 @@ const CalendarPage = () => {
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-bold text-[#5B2D2D] truncate">{item.title || item.name}</h4>
-                          <p className="text-xs text-stone-500 capitalize">{item.amount ? `$${item.amount}` : 'No amount'}</p>
+                          <p className="text-xs text-stone-500 capitalize">{item.amount ? `₹${item.amount}` : 'No amount'}</p>
                         </div>
                       </div>
                       <button onClick={() => handleDelete(item)} className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-stone-300 hover:text-red-500 transition-colors">
@@ -430,7 +430,7 @@ const CalendarPage = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-[#5B2D2D] truncate">{ev.title || ev.name}</p>
-                                    <p className="text-xs text-[#5B2D2D]/60">{ev.amount ? `$${ev.amount}` : ''}</p>
+                                    <p className="text-xs text-[#5B2D2D]/60">{ev.amount ? `₹${ev.amount}` : ''}</p>
                                 </div>
                             </div>
                         ))
@@ -483,7 +483,7 @@ const CalendarPage = () => {
 
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-xs font-bold text-[#5B2D2D]/70 ml-1 mb-1.5">Amount ($)</label>
+                    <label className="block text-xs font-bold text-[#5B2D2D]/70 ml-1 mb-1.5">Amount (₹)</label>
                     <input 
                       type="number" 
                       placeholder="0.00"

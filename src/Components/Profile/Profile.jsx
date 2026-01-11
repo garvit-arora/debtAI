@@ -398,7 +398,7 @@ export default function Profile() {
                     <div>
                         <label className="block text-xs font-bold text-[#5B2D2D]/60 mb-1 ml-1">Monthly Income</label>
                         <div className="relative">
-                        <span className="absolute left-3 top-3.5 text-stone-400">$</span>
+                        <span className="absolute left-3 top-3.5 text-stone-400">₹</span>
                         <input 
                             type="number" 
                             value={formData.income}
@@ -410,7 +410,7 @@ export default function Profile() {
                     <div>
                         <label className="block text-xs font-bold text-[#5B2D2D]/60 mb-1 ml-1">Monthly Expenses</label>
                         <div className="relative">
-                        <span className="absolute left-3 top-3.5 text-stone-400">$</span>
+                        <span className="absolute left-3 top-3.5 text-stone-400">₹</span>
                         <input 
                             type="number" 
                             value={formData.expenses}
@@ -596,7 +596,7 @@ export default function Profile() {
                         <h3 className="font-bold text-[#5B2D2D] text-lg truncate">{debt.name}</h3>
                         <div className="flex flex-wrap gap-2 sm:gap-3 text-sm text-stone-500">
                            <span className="bg-stone-100 px-2 py-0.5 rounded-md text-stone-600 font-medium">
-                             ${debt.amount}
+                             ₹{debt.amount}
                            </span>
                            <span>{debt.interest}% APR</span>
                            <span>Due: {debt.dueDate}</span>
@@ -636,7 +636,7 @@ export default function Profile() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[#5B2D2D]/70 ml-1 mb-1">Amount ($)</label>
+                    <label className="block text-xs font-bold text-[#5B2D2D]/70 ml-1 mb-1">Amount (₹)</label>
                     <input type="number" value={currentDebt.amount} onChange={(e) => setCurrentDebt({...currentDebt, amount: e.target.value})} className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#5B2D2D]/20" />
                   </div>
                   <div>
