@@ -1,0 +1,86 @@
+.landing-container {
+  overflow-x: hidden;
+}
+
+.navbar {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+}
+
+.navbar.scrolled {
+  background: rgba(var(--background-rgb), 0.8);
+  border-bottom-color: var(--border);
+}
+
+.prompt-mosaic {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-20px);
+}
+
+@keyframes marquee-l {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-r {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.marquee-row-0 {
+  animation: marquee-l 60s linear infinite;
+}
+
+.marquee-row-1 {
+  animation: marquee-r 80s linear infinite;
+}
+
+.marquee-row-2 {
+  animation: marquee-l 70s linear infinite;
+}
+
+.feature-image-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, var(--background) 100%);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.glass-ui-mockup {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  height: 120%;
+  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 3rem;
+  }
+}
+
+/* Custom Scrollbar for the preview */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}

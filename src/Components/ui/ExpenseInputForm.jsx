@@ -144,7 +144,7 @@ const ExpenseInputForm = ({ onClose }) => {
             <button 
               type="submit" 
               disabled={loading}
-              className="mt-4 w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all transform active:scale-95 flex justify-center items-center gap-2"
+              className="mt-4 w-full py-4 bg-foreground hover:opacity-90 text-background font-bold rounded-2xl shadow-lg transition-all transform active:scale-95 flex justify-center items-center gap-2"
             >
               {loading ? <Loader2 className="animate-spin" /> : "Save Expense"}
             </button>

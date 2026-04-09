@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import './App.css'
 import Login from "../src/Components/Login/Login"
-import Hero from './Components/Hero/Hero';
+import Landing from './Components/Landing/Landing';
+
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from './Components/Dashboard/Dashboard';
 import Onboarding from './Components/Onboarding/Onboarding';
 import ProtectedRoute from "./../routes/ProtectedRoute";
 import DebtAI from './Components/DebtAI/DebtAI';
 import { AuthProvider } from './context/AuthContent';
-import NotFound from './Components/404Page/404Page';
+import NotFound from './Components/ui/NotFound';
 import InstallPrompt from './Components/InstallPrompt/InstallPrompt';
 import WaitingPage from './Components/WaitingPage.jsx/WaitingPage';
 import Pending from './Components/Pending/Pending';
@@ -17,16 +19,22 @@ import CalendarPage from './Components/Calendar/Calendar';
 import Profile from './Components/Profile/Profile';
 import Blogs from './Components/Blogs/Blogs';
 import PremiumModal from "../src/Components/Premium/Premium"
-import Legal from './Components/Legal/Legal';
+import Legal from './Components/ui/Legal';
+import Support from './Components/ui/Support';
+import { ThemeProvider } from './context/ThemeContext';
+
 
 function App() {
   return (
     <>
+    <ThemeProvider>
     <AuthProvider>
     <Routes>
-      <Route path="/" element={<Hero />} />
+      <Route path="/" element={<Landing />} />
+
+
       <Route path="/legal" element={<Legal />} />
-    {/* <Route path="/" element={<WaitingPage />} /> */}
+      <Route path="/support" element={<Support />} />
 
       <Route
         path="/dashboard"
@@ -49,14 +57,6 @@ function App() {
         element={
           <ProtectedRoute>
             <Blogs />
-          </ProtectedRoute>
-        }
-      />
-       <Route
-        path="/premium"
-        element={
-          <ProtectedRoute>
-            <PremiumModal />
           </ProtectedRoute>
         }
       />
@@ -113,6 +113,7 @@ function App() {
     <InstallPrompt />
     
   </AuthProvider>
+  </ThemeProvider>
   </>
   );
 }

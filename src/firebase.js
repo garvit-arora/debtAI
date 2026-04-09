@@ -10,8 +10,14 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+export const app = firebaseConfig.projectId ? initializeApp(firebaseConfig) : null;
+export const analytics = (app && typeof window !== "undefined") ? getAnalytics(app) : null;
+
+if (!app) {
+  console.warn("Firebase configuration is missing. Firebase features will not be available.");
+}

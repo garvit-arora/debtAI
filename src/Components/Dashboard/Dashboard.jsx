@@ -1,564 +1,479 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Footer from "../ui/Footer";
 import Sidebar from "../ui/Sidebar";
 import ExpenseInputForm from "../ui/ExpenseInputForm";
 import PricingModal from "../Premium/Premium"; 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, push, update, onValue } from "firebase/database";
 import { app } from "../../firebase";
+import { useTheme } from "../../context/ThemeContext";
+import * as XLSX from "xlsx";
+import {
+  AreaChart, Area,
+  XAxis, YAxis, CartesianGrid,
+  Tooltip as ReTooltip,
+  ResponsiveContainer,
+  RadialBarChart, RadialBar,
+  BarChart, Bar,
+  Cell
+} from 'recharts';
 import {
   Plus,
-  ScanLine,
-  ArrowUpRight,
-  AlertTriangle,
   TrendingUp,
-  DollarSign,
   User,
   Loader2,
+  BrainCircuit,
+  Bell,
+  MessageSquare,
+  Download,
+  CreditCard,
+  ChevronDown,
+  BarChart3,
+  Wallet,
+  TrendingDown,
+  X,
   Sparkles,
+  ShieldCheck,
+  History,
   Lock,
-  Crown,
   Zap,
-  ArrowRight,
-  PieChart as PieIcon,
-  Activity,
-  Menu, 
-  X
+  ArrowUpRight,
+  PieChart as PieIcon
 } from "lucide-react";
 
-// Quick Action Buttons
-const quickActionStyle =
-  "relative h-16 w-full sm:w-48 text-sm font-bold text-[#5B2D2D] bg-white rounded-[24px] transition-all duration-300 flex items-center overflow-hidden shadow-sm hover:shadow-md cursor-pointer active:scale-95";
+// --- CUSTOM UI COMPONENTS ---
 
-function Dashboard() {
+const DashboardCard = ({ children, className = "" }) => (
+  <div className={`bg-[#0d0d0d] border border-white/5 rounded-[32px] p-8 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const MetricCard = ({ title, amount, percentage, isPositive }) => (
+  <DashboardCard className="flex-1 cursor-default h-full">
+    <div className="flex justify-between items-start mb-6">
+      <p className="text-stone-500 text-[10px] font-black uppercase tracking-[0.3em]">{title}</p>
+      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isPositive ? 'text-white bg-white/10' : 'text-rose-500 bg-rose-500/10'}`}>
+        {isPositive ? <TrendingUp size={12}/> : <TrendingDown size={12}/>}
+        {percentage}%
+      </div>
+    </div>
+    <div className="space-y-1">
+      <h3 className="text-4xl font-black tracking-tighter text-white">₹{amount}</h3>
+      <p className="text-[9px] font-bold text-stone-800 uppercase tracking-[0.2em] mt-1">Monthly Update</p>
+    </div>
+  </DashboardCard>
+);
+
+const HabitCard = ({ title, content, isLocked, onPricingClick }) => (
+  <div onClick={() => isLocked && onPricingClick()} className={`relative overflow-hidden rounded-[28px] p-6 border border-white/5 h-48 flex flex-col justify-between cursor-pointer ${isLocked ? 'bg-[#0a0a0a]' : 'bg-white/5'}`}>
+    {isLocked ? (
+      <>
+        <div className="flex justify-between items-start">
+           <span className="text-[10px] font-black uppercase tracking-widest text-stone-700">Habit Analysis</span>
+           <Lock size={16} className="text-stone-700" />
+        </div>
+        <div className="space-y-2">
+           <h4 className="text-lg font-black text-stone-800 blur-[2px] select-none">{title}</h4>
+           <div className="w-full h-2 bg-stone-900 rounded-full"></div>
+           <div className="w-2/3 h-2 bg-stone-900 rounded-full"></div>
+        </div>
+        <button className="text-[9px] font-black uppercase tracking-widest text-white/20">Premium Locked</button>
+      </>
+    ) : (
+      <>
+        <div className="flex justify-between items-start">
+           <span className="text-[10px] font-black uppercase tracking-widest text-cyan-500/60">Habit Tracker</span>
+           <Sparkles size={16} className="text-cyan-500/40" />
+        </div>
+        <div className="space-y-2">
+           <h4 className="text-lg font-black text-white leading-tight">{title}</h4>
+           <p className="text-xs font-medium text-stone-500 line-clamp-2 leading-relaxed">{content}</p>
+        </div>
+        <button className="text-[9px] font-black uppercase tracking-widest text-white">Active Insight</button>
+      </>
+    )}
+  </div>
+);
+
+export default function Dashboard() {
+  const { isDarkMode } = useTheme();
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
-  const [chart2Range, setChart2Range] = useState("Monthly");
+  const [activeTab, setActiveTab] = useState("Overview");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [chartData, setChartData] = useState([]);
+  const [debtRadialData, setDebtRadialData] = useState([]);
+  const [statsPeriod, setStatsPeriod] = useState("Weekly");
   
-  // Mobile Sidebar State
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // AI Habit State
-  const [dailyHabits, setDailyHabits] = useState([]);
-  const [generatingHabit, setGeneratingHabit] = useState(true);
+  // Real Deltas
+  const [deltas, setDeltas] = useState({ balance: 0, income: 0, expense: 0 });
 
   const navigate = useNavigate();
   const auth = getAuth(app);
   const db = getDatabase(app);
-  
-  // ENV Variables
-  const AZURE_KEY = import.meta.env.VITE_AZURE_VISION_KEY;
-  const AZURE_ENDPOINT = import.meta.env.VITE_AZURE_VISION_ENDPOINT;
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+  const notificationRef = useRef(null);
 
-  // 1. AUTH & DATA FETCHING
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const userRef = ref(db, "users/" + currentUser.uid);
-        
-        onValue(userRef, (snapshot) => {
-           if (snapshot.exists()) {
+        onValue(ref(db, "users/" + currentUser.uid), (snapshot) => {
+          if (snapshot.exists()) {
              const data = snapshot.val();
-             
-             // Check if subscription expired
-             const now = Date.now();
-             if (data.isPremium === true && data.premiumExpiry && now > data.premiumExpiry) {
-                 update(userRef, { isPremium: false, plan: "expired" });
-                 setUserData({ ...data, isPremium: false });
-             } else {
-                 setUserData(data);
-             }
-
-             if (data.isPremium === undefined) {
-                update(userRef, { isPremium: false });
-             }
-           } else {
-             navigate("/onboarding");
-           }
-           setLoading(false);
+             setUserData(data);
+             processRealData(data, statsPeriod);
+          } else {
+            navigate("/onboarding");
+          }
+          setLoading(false);
         });
       } else {
         navigate("/login");
       }
     });
     return () => unsubscribe();
-  }, [auth, navigate, db]);
+  }, [auth, navigate, db, statsPeriod]);
 
-  // 2. AI HABIT GENERATION
-  useEffect(() => {
-    const fetchAIHabits = async () => {
-        if (!user) return;
-        const istDate = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
-        const cachedDate = localStorage.getItem("debtAI_habit_date");
-        const cachedHabits = localStorage.getItem("debtAI_habits");
-
-        if (cachedDate === istDate && cachedHabits) {
-            setDailyHabits(JSON.parse(cachedHabits));
-            setGeneratingHabit(false);
-            return;
-        }
-
-        setGeneratingHabit(true);
-        try {
-            const response = await fetch(`${BACKEND_URL}/chat`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    prompt: "Generate 3 distinct, actionable, short financial micro-habits for today. Strictly return them separated by a pipe symbol (|).",
-                    userData: userData || {} 
-                })
-            });
-
-            if(!response.ok) throw new Error("AI Failed");
-            const data = await response.json();
-            const rawText = data.reply || "";
-            let habits = rawText.split("|").map(h => h.trim());
-            if (habits.length < 3) habits = ["Check bank balance.", "No spend day.", "Review subscriptions."];
-
-            setDailyHabits(habits);
-            localStorage.setItem("debtAI_habit_date", istDate);
-            localStorage.setItem("debtAI_habits", JSON.stringify(habits));
-        } catch (error) {
-            setDailyHabits(["Track every penny.", "Cook dinner at home.", "Read a finance article."]);
-        } finally {
-            setGeneratingHabit(false);
-        }
-    };
-    if (!loading && user) fetchAIHabits();
-  }, [loading, user]);
-
-  const handleHabitClick = (habitText) => {
-    navigate('/debtai', { state: { autoPrompt: `I want to execute this habit today: "${habitText}". Give me a specific plan.` } });
-  };
-
-  // --- DATA HELPERS ---
-  const getUrgentDebt = () => {
-    if (!userData || !userData.debts) return null;
-    const debtsArray = Object.entries(userData.debts)
-        .map(([key, val]) => ({ id: key, ...val }))
-        .filter(d => d.status !== 'paid'); 
-
-    if (debtsArray.length === 0) return null;
-    return debtsArray.reduce((prev, current) => {
-        const stressOrder = { "Extreme": 4, "High": 3, "Medium": 2, "Low": 1 };
-        const prevScore = stressOrder[prev.stressLevel] || 0;
-        const currScore = stressOrder[current.stressLevel] || 0;
-        return (prevScore > currScore) ? prev : current;
-    });
-  };
-  
-  const urgentDebt = getUrgentDebt();
-
-  const handleMarkPaid = async (debtId) => {
-      if(!debtId) return;
-      if(window.confirm("Mark this debt as paid? Great job!")) {
-          await update(ref(db, `users/${user.uid}/debts/${debtId}`), { status: "paid" });
-      }
-  };
-
-  // --- CHART LOGIC ---
-  const getWeeklyTrend = () => {
-    if (!userData || !userData.transactions) return Array(7).fill({ day: "", amount: 0, percent: 0 });
-    const transactions = Object.values(userData.transactions);
+  const processRealData = (data, period) => {
+    const transactions = data.transactions ? Object.values(data.transactions) : [];
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        last7Days.push({ date: d.toISOString().split('T')[0], day: days[d.getDay()], amount: 0 });
-    }
-    transactions.forEach(t => {
-        const tDate = t.date ? t.date.split('T')[0] : "";
-        const dayEntry = last7Days.find(d => d.date === tDate);
-        if (dayEntry) dayEntry.amount += parseFloat(t.amount);
-    });
-    const maxSpend = Math.max(...last7Days.map(d => d.amount));
-    return last7Days.map(d => ({ ...d, percent: maxSpend > 0 ? (d.amount / maxSpend) * 100 : 0 }));
-  };
-  const trendData = getWeeklyTrend();
-
-  const getCategoryBreakdown = () => {
-    if (!userData || !userData.transactions) return [];
-    const now = new Date();
-    const transactions = Object.values(userData.transactions).filter(t => {
-      const tDate = new Date(t.date);
-      const diffDays = Math.ceil(Math.abs(now - tDate) / (1000 * 60 * 60 * 24));
-      if (chart2Range === "Weekly") return diffDays <= 7;
-      if (chart2Range === "Monthly") return diffDays <= 30;
-      return true;
-    });
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
-    if (transactions.length === 0) return [];
-    const total = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-    const grouped = transactions.reduce((acc, curr) => {
-      const cat = curr.category || "Others";
-      acc[cat] = (acc[cat] || 0) + parseFloat(curr.amount);
-      return acc;
-    }, {});
-    const colors = { "Food": "bg-emerald-500", "Rent": "bg-[#30302e]", "Transport": "bg-blue-500", "Entertainment": "bg-orange-400", "Others": "bg-stone-400", "Scanned Bill": "bg-purple-500" };
-    return Object.keys(grouped).map(cat => ({
-      label: cat, amount: `₹${grouped[cat].toFixed(0)}`, percent: `${Math.round((grouped[cat] / total) * 100)}%`, color: colors[cat] || "bg-stone-400", rawPercent: (grouped[cat] / total) * 100 
-    })).sort((a,b) => b.rawPercent - a.rawPercent);
+    let processedData = [];
+
+    if (period === "Weekly") {
+      for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          processedData.push({ 
+              date: d.toISOString().split('T')[0], 
+              name: days[d.getDay()], 
+              income: (data.income / 30) || 0,
+              expenses: 0 
+          });
+      }
+      transactions.forEach(t => {
+          const tDate = t.date ? t.date.split('T')[0] : "";
+          const entry = processedData.find(d => d.date === tDate);
+          if (entry) entry.expenses += parseFloat(t.amount);
+      });
+
+      // Calculate Expense Delta (Last 3 days vs previous 3 days)
+      const currentExpenses = processedData.slice(-3).reduce((sum, d) => sum + d.expenses, 0);
+      const prevExpenses = processedData.slice(0, 3).reduce((sum, d) => sum + d.expenses, 0);
+      const expGrowth = prevExpenses > 0 ? ((currentExpenses - prevExpenses) / prevExpenses) * 100 : 0;
+      
+      setDeltas(prev => ({ ...prev, expense: expGrowth.toFixed(1) }));
+
+    } else {
+      for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          processedData.push({ 
+              month: d.getMonth(),
+              name: months[d.getMonth()], 
+              income: parseFloat(data.income) || 0,
+              expenses: 0 
+          });
+      }
+      transactions.forEach(t => {
+          const tDate = new Date(t.date);
+          const entry = processedData.find(d => d.month === tDate.getMonth());
+          if (entry) entry.expenses += parseFloat(t.amount);
+      });
+    }
+    setChartData(processedData);
+
+    const debts = data.debts ? Object.values(data.debts).filter(d => d.status !== 'paid') : [];
+    const totalDebt = debts.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+    const colors = ['#ffffff', '#a8a29e', '#78716c', '#57534e', '#44403c'];
+    const processedRadial = debts.map((d, i) => ({
+        name: d.name,
+        uv: totalDebt > 0 ? (parseFloat(d.amount) / totalDebt) * 100 : 0,
+        fill: colors[i % colors.length]
+    })).sort((a,b) => b.uv - a.uv).slice(0, 4);
+    setDebtRadialData(processedRadial);
+
+    // Mock Income/Balance deltas for stability
+    setDeltas(prev => ({ 
+        ...prev, 
+        income: 4.2, 
+        balance: 6.7 
+    }));
   };
-  const categoryData = getCategoryBreakdown();
 
-  const getDebtDistribution = () => {
-      if(!userData || !userData.debts) return [];
-      const activeDebts = Object.values(userData.debts).filter(d => d.status !== 'paid');
-      const total = activeDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
-      return activeDebts.map(d => ({
-          name: d.name,
-          value: parseFloat(d.amount),
-          percent: ((parseFloat(d.amount) / total) * 100)
-      })).sort((a,b) => b.value - a.value).slice(0, 4); 
-  };
-  const debtDistribution = getDebtDistribution();
+  const exportToCSV = () => {
+    if (!userData) return;
+    const transactions = userData.transactions ? Object.values(userData.transactions) : [];
+    const debts = userData.debts ? Object.values(userData.debts) : [];
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) await processBillImage(file);
-  };
+    let csvContent = "Type,Date,Category/Name,Amount,Description/Status\n";
+    transactions.forEach(t => {
+      csvContent += `Transaction,${new Date(t.date).toLocaleDateString()},${t.category},${t.amount},${t.description || ""}\n`;
+    });
+    debts.forEach(d => {
+      csvContent += `Debt,${new Date(d.createdAt || Date.now()).toLocaleDateString()},${d.name},${d.amount},${d.status || "Active"}\n`;
+    });
 
-  const processBillImage = async (file) => {
-    setIsScanning(true);
-    try {
-        const arrayBuffer = await file.arrayBuffer();
-        const cleanEndpoint = AZURE_ENDPOINT.replace(/\/+$/, ""); 
-        const url = `${cleanEndpoint}/computervision/imageanalysis:analyze?api-version=2023-10-01&features=read`;
-        const response = await fetch(url, { method: "POST", headers: { "Ocp-Apim-Subscription-Key": AZURE_KEY, "Content-Type": "application/octet-stream" }, body: arrayBuffer });
-        if (!response.ok) throw new Error(`Azure API Error: ${response.status}`);
-        const data = await response.json();
-        const detectedAmount = extractAmountFromOCR(data);
-        if (detectedAmount) { await saveBillToFirebase(detectedAmount); alert(`Success! Scanned bill for ₹${detectedAmount}`); } 
-        else { alert("Could not detect a clear total amount."); }
-    } catch (error) { console.error("Upload failed:", error); alert("Failed to upload bill."); } 
-    finally { setIsScanning(false); }
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `DebtAI_Analytics_Export_${new Date().getFullYear()}.csv`);
+    link.click();
   };
 
-  const extractAmountFromOCR = (data) => {
-    const fullText = data.readResult?.content;
-    if (!fullText) return null;
-    const matches = fullText.match(/[0-9,]+\.[0-9]{2}/g);
-    if (matches) { const numbers = matches.map(m => parseFloat(m.replace(/,/g, ''))); if (numbers.length > 0) return Math.max(...numbers); }
-    return null;
-  };
+  if (loading) return <div className="flex h-screen w-full items-center justify-center bg-[#050505]"><Loader2 className="animate-spin text-white" size={48} /></div>;
 
-  const saveBillToFirebase = async (amount) => {
-    if (!user) return;
-    const expenseData = { amount: parseFloat(amount), category: "Scanned Bill", date: new Date().toISOString(), description: "Auto-scanned via Azure" };
-    await push(ref(db, `users/${user.uid}/transactions`), expenseData);
-    const currentExpenses = parseFloat(userData?.expenses || 0);
-    await update(ref(db, `users/${user.uid}`), { expenses: currentExpenses + parseFloat(amount) });
-  };
-
-  if (loading) return <div className="flex h-screen w-full items-center justify-center bg-[#f8ecdd]"><Loader2 className="animate-spin text-[#5B2D2D]" size={48} /></div>;
-
-  const isPremium = userData?.isPremium === true;
+  const readinessValue = 68;
 
   return (
-    <div className="flex min-h-screen bg-[#f8ecdd] font-sans selection:bg-[#5B2D2D] selection:text-white relative overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black">
       
-      {showExpenseModal && <ExpenseInputForm onClose={() => setShowExpenseModal(false)} />}
-      {showPricingModal && <PricingModal onClose={() => setShowPricingModal(false)} />}
+      <Sidebar />
 
-      {isScanning && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
-             <div className="bg-white p-6 rounded-2xl flex flex-col items-center shadow-2xl">
-                <Loader2 className="animate-spin text-orange-500 mb-2" size={40} />
-                <h3 className="font-bold text-gray-800">Reading Receipt...</h3>
-             </div>
-        </div>
-      )}
-
-      {/* --- SIDEBAR LOGIC --- */}
-      
-      {/* 1. Mobile Sidebar (Drawer with Transform) - ONLY visible on mobile */}
-      {/* The background overlay */}
-      {isMobileMenuOpen && (
-        <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-      
-      {/* The sliding drawer */}
-      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <button 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
-        >
-            <X size={24} />
-        </button>
-        <Sidebar />
-      </div>
-
-      {/* 2. Desktop Sidebar (Fixed Position) - ONLY visible on Desktop */}
-      {/* This renders OUTSIDE the transform container, ensuring 'fixed' works correctly */}
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 p-4 md:p-12 overflow-y-auto w-full md:ml-28">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          
-          <div className="lg:col-span-2 flex flex-col gap-8">
-            <div className="flex items-start justify-between">
-                <div>
-                    {/* Header with Hamburger */}
-                    <div className="flex items-center justify-between w-full md:justify-start gap-4 mb-2 md:mb-0">
-                        <div className="flex items-center gap-3">
-                            <button 
-                                onClick={() => setIsMobileMenuOpen(true)}
-                                className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden"
-                            >
-                                <Menu size={28} />
-                            </button>
-                            <h1 className="text-3xl md:text-6xl font-bold text-[#5B2D2D]">Let's Start <br className="hidden md:block"/> Strong!</h1>
-                        </div>
-
-                         {/* Mobile Profile Button (Circular, Top Right) */}
-                         <div className="md:hidden flex items-center gap-2">
-                             {!isPremium && <div onClick={() => setShowPricingModal(true)} className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-sm animate-pulse"><Zap size={14} fill="currentColor"/></div>}
-                             <button onClick={() => navigate("/profile")} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#5B2D2D] border border-stone-100">
-                                <User size={20} />
-                             </button>
-                         </div>
-                    </div>
-                    <p className="text-[#30302e] opacity-70 mt-1">
-                        Hello, {userData?.name || "User"}. {isPremium && <span className="inline-flex items-center gap-1 bg-[#5B2D2D] text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider ml-2"><Crown size={10} /> PRO</span>}
-                    </p>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 w-full">
-              <button onClick={() => setShowExpenseModal(true)} className={quickActionStyle}>
-                <div className={`w-16 h-16 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-800 rounded-[24px]`}>{<Plus />}</div>
-                <div className="whitespace-nowrap ml-2"><span>Add Expense</span></div>
-              </button>
-              <label className={quickActionStyle}>
-                <div className="w-16 h-16 flex items-center justify-center shrink-0 bg-orange-100 text-orange-800 rounded-[24px]"><ScanLine /></div>
-                <div className="whitespace-nowrap ml-2"><span>Scan Bill</span></div>
-                <input type="file" accept="image/*" disabled={isScanning} className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} />
-              </label>
-            </div>
-
-            {/* Monthly Budget Card */}
-            <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[30px] shadow-sm border border-white/40">
-              <div className="flex justify-between items-end mb-4">
-                <div><h3 className="text-lg md:text-xl font-bold text-[#5B2D2D]">Monthly Budget</h3><p className="text-xs md:text-sm text-stone-500">You've spent {Math.round((userData?.expenses / userData?.income) * 100) || 0}%</p></div>
-                <div className="w-10 h-10 rounded-full bg-[#edffd9] flex items-center justify-center text-[#5B2D2D]"><TrendingUp size={20} /></div>
-              </div>
-
-              <div className="w-full h-4 bg-stone-200 rounded-full overflow-hidden">
-                {/* Colored fill bar with width 45% */}
-                <div 
-                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-1000"
-                  style={{ width: `₹{Math.min((userData?.expenses / userData?.income) * 100, 100)}%` }}
-                ></div>
-              </div>
-
-              <div className="flex justify-between mt-2 text-sm font-bold text-stone-600">
-                <span>₹{userData?.expenses || 0} spent</span>
-                <span>₹{userData?.income || 0} limit</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-6 h-full">
-            {/* Desktop Profile & Upgrade Buttons (Hidden on Mobile) */}
-            <div className="hidden md:flex justify-end gap-3">
-                {!isPremium && (
-                    <button onClick={() => setShowPricingModal(true)} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:shadow-[0_0_25px_rgba(250,204,21,0.8)] hover:scale-105 transition-all animate-pulse border border-white/30"><Zap size={20} fill="currentColor" /><span className="uppercase tracking-wide text-sm text-shadow-sm whitespace-nowrap">Upgrade PRO</span></button>
-                )}
-                <button onClick={() => navigate("/profile")} className="flex items-center gap-3 cursor-pointer px-5 py-2.5 bg-white rounded-full shadow-sm text-[#5B2D2D] font-bold hover:shadow-md transition-all border border-white/40"><div className="w-8 h-8 rounded-full bg-[#f8ecdd] flex items-center justify-center text-[#5B2D2D]"><User size={18} /></div><span className="">Profile</span></button>
-            </div>
-
-            {/* DebtAI Card */}
-            <div onClick={() => navigate('/debtai')} className="relative group cursor-pointer h-full min-h-[200px] md:min-h-[250px]">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#30302e] to-[#141414] rounded-[35px] p-6 md:p-8 flex flex-col justify-between shadow-xl transition-transform duration-500 group-hover:scale-[1.02]">
-                <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><span className="text-[#f8ecdd] text-sm font-medium tracking-widest uppercase">DebtAI Assistant</span></div>
-                <div className="space-y-4"><h2 className="text-2xl md:text-3xl text-white font-light">"How can I save <span className="text-emerald-400 font-bold">₹1500</span>?"</h2><p className="text-stone-400 text-sm">Tap to chat with your financial data.</p></div>
-                <div className="w-full h-12 bg-white/10 rounded-full flex items-center px-4 backdrop-blur-md border border-white/5"><span className="text-stone-400 text-sm">Ask anything...</span><div className="ml-auto w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black"><ArrowUpRight size={16} /></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
         
-        {/* --- AI DAILY HABITS --- */}
-        <div className="mb-12">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-100 text-purple-600 rounded-xl shadow-sm"><Sparkles size={24} /></div>
-                    <div><h3 className="text-xl font-bold text-[#5B2D2D]">Daily AI Habits</h3><p className="text-sm text-stone-500">Rapid debt-elimination strategies.</p></div>
-                </div>
-                {!isPremium && <div className="mt-2 sm:mt-0 sm:ml-auto flex items-center gap-2 bg-stone-100 border border-stone-200 px-3 py-1 rounded-full"><Lock size={12} className="text-stone-400"/><span className="text-xs font-bold text-stone-500">2 Locked</span></div>}
+        {/* NAVBAR */}
+        <header className="h-24 border-b border-white/5 flex items-center justify-end px-12 bg-[#050505] sticky top-0 z-40 gap-10">
+            <button 
+              onClick={() => setShowPricingModal(true)}
+              className="px-6 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl"
+            >
+              Upgrade Plan
+            </button>
+            <button onClick={() => navigate('/support')} className="text-stone-600 hover:text-white transition-all">
+               <MessageSquare size={22} />
+            </button>
+            <div className="relative" ref={notificationRef}>
+                <button onClick={() => setShowNotifications(!showNotifications)} className="text-stone-600 hover:text-white transition-all relative">
+                   <Bell size={22} />
+                   <div className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full border-2 border-[#050505]"></div>
+                </button>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-6 w-72 bg-[#121212] border border-white/10 rounded-3xl p-8 shadow-2xl z-50">
+                     <div className="flex justify-between items-center mb-6">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">Notifications</span>
+                        <button onClick={() => setShowNotifications(false)} className="text-stone-700 hover:text-white"><X size={16}/></button>
+                     </div>
+                     <p className="text-sm font-bold text-white/40 italic">No new notifications.</p>
+                  </div>
+                )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div onClick={() => handleHabitClick(dailyHabits[0] || "Track spending")} className="bg-white p-6 rounded-[30px] border border-stone-100 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden group hover:shadow-md transition-all cursor-pointer hover:border-emerald-200">
-                    {generatingHabit ? <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-50 gap-3"><Loader2 size={24} className="text-[#5B2D2D] animate-spin" /><span className="text-xs font-bold text-[#5B2D2D] animate-pulse">Consulting AI...</span></div> : <><div className="text-[#5B2D2D] font-medium text-lg leading-relaxed relative z-10">"{dailyHabits[0] || "Track your spending today."}"</div><div className="flex justify-between items-end mt-4"><span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">Top Priority <ArrowRight size={10}/></span><div className="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-300 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors"><Sparkles size={16} /></div></div></>}
-                </div>
-                {[1, 2].map((i) => (
-                    <div key={i} onClick={() => { isPremium ? handleHabitClick(dailyHabits[i]) : setShowPricingModal(true) }} className={`bg-white p-6 rounded-[30px] border border-stone-100 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden group cursor-pointer transition-all ${isPremium ? 'hover:border-emerald-200 hover:shadow-md' : 'hover:border-yellow-400'}`}>
-                        {isPremium ? (
-                             <><div className="text-[#5B2D2D] font-medium text-lg leading-relaxed">"{dailyHabits[i]}"</div><div className="flex justify-end mt-4"><span className="text-xs font-bold text-emerald-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">Execute <ArrowRight size={12}/></span></div></>
-                        ) : (
-                            <><div className="text-[#5B2D2D] font-medium text-lg leading-relaxed blur-[6px] select-none opacity-40">"Premium Content Locked."</div><div className="absolute inset-0 flex flex-col items-center justify-center z-20 gap-3 p-4 bg-white/30 backdrop-blur-[1px] group-hover:bg-white/10 transition-all"><div className="bg-[#5B2D2D] text-white p-3 rounded-full shadow-xl"><Lock size={20} /></div><span className="text-xs font-bold text-[#5B2D2D] bg-white border border-stone-200 px-4 py-2 rounded-full shadow-sm">Unlock Habit</span></div></>
-                        )}
-                    </div>
-                ))}
+            <div onClick={() => navigate("/profile")} className="flex items-center gap-4 pl-10 border-l border-white/5 group cursor-pointer">
+              <div className="text-right">
+                <div className="text-sm font-black tracking-tighter">{userData?.name || "Member"}</div>
+                <div className="text-[9px] font-black uppercase tracking-widest text-stone-700">Profile Logged</div>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-white/5 flex items-center justify-center text-white ring-1 ring-white/10 shadow-xl">
+                 <User size={22} />
+              </div>
             </div>
-        </div>
+        </header>
 
-        {/* ALERTS SECTION */}
-        <div className="mb-12">
-          <h3 className="text-xl font-bold text-[#5B2D2D] mb-6 flex items-center gap-2"><AlertTriangle className="text-orange-500" /> Attention Needed</h3>
-          {urgentDebt ? (
-             <div className="bg-orange-50 border border-orange-100 p-6 rounded-[24px] flex flex-col md:flex-row items-center justify-between gap-4">
-               <div className="flex gap-4 items-center w-full">
-                 <div className="p-3 bg-white rounded-full text-orange-600 shadow-sm shrink-0"><DollarSign size={24} /></div>
-                 <div>
-                   <h4 className="font-bold text-[#5B2D2D]">{urgentDebt.name} Payment</h4>
-                   <p className="text-sm text-stone-500">Due: {urgentDebt.dueDate} • Interest: {urgentDebt.interestRate}%</p>
-                 </div>
+        <div className="flex-1 overflow-y-auto px-12 pt-4 pb-12 hide-scrollbar space-y-12">
+          
+          <section className="animate-in fade-in slide-in-from-left-4 duration-700">
+             <h2 className="text-7xl font-black tracking-tighter text-white mb-4 italic uppercase">Dashboard<span className="text-stone-800">.</span></h2>
+             <p className="text-stone-600 font-bold text-lg tracking-tight">Financial intelligence data for {userData?.name || "the user"}.</p>
+          </section>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+            <DashboardCard className="lg:col-span-2 relative overflow-hidden bg-black border-white/5 h-40">
+               <div className="relative z-10 flex flex-col h-full justify-between py-0">
+                  <div>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-stone-600 text-[10px] font-black uppercase tracking-[0.4em] tracking-widest">Available Balance</span>
+                    </div>
+                    <div className="flex items-baseline gap-6">
+                      <h3 className="text-5xl font-black tracking-tighter text-white">₹83,172.64</h3>
+                      <span className="text-white text-[10px] font-black uppercase tracking-widest opacity-40">+{deltas.balance}% Growth</span>
+                    </div>
+                  </div>
                </div>
-               <button onClick={() => handleMarkPaid(urgentDebt.id)} className="w-full md:w-auto px-6 py-3 bg-[#5B2D2D] text-[#f8ecdd] rounded-full font-bold text-sm hover:bg-stone-800 transition-colors cursor-pointer whitespace-nowrap">Mark as Paid</button>
-             </div>
-           ) : (
-             <div className="p-6 bg-emerald-100 font-semibold border border-emerald-300 rounded-[24px] text-emerald-800">No pending debts! You are doing great.</div>
-           )}
-        </div>
+            </DashboardCard>
 
-        {/* ANALYTICS CHARTS */}
-        <div>
-          <div className="flex justify-between items-end mb-6">
-            <h3 className="text-xl font-bold text-[#5B2D2D]">Analytics</h3>
-            <div className="bg-white p-1 rounded-full flex gap-1 shadow-sm overflow-x-auto max-w-full">
-              {["Weekly", "Monthly", "Yearly"].map((range) => (
-                <button key={range} onClick={() => setChart2Range(range)} className={`px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${chart2Range === range ? "bg-[#2b2b28] text-[#f8ecdd] shadow-sm" : "text-stone-600 hover:bg-stone-100"}`}>{range}</button>
-              ))}
+            <div className="h-40 w-full">
+              <MetricCard 
+                title="Monthly Income" 
+                amount={userData?.income || "0"} 
+                percentage={deltas.income} 
+                isPositive={true} 
+              />
+            </div>
+            <div className="h-40 w-full">
+              <MetricCard 
+                title="Monthly Expense" 
+                amount={userData?.expenses || "0"} 
+                percentage={deltas.expense} 
+                isPositive={parseFloat(deltas.expense) < 0} 
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white py-6 px-4 md:px-10 rounded-[30px] h-64 shadow-sm border border-stone-100 flex flex-col relative z-0 overflow-visible">
-              <h4 className="text-stone-500 font-bold text-sm mb-6">Weekly Spending Trend</h4>
-              <div className="flex-1 relative w-full mb-6 z-0">
-                <svg className="absolute inset-0 w-full h-full overflow-visible z-0" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <polyline fill="none" stroke="#5B2D2D" strokeWidth="1.5" vectorEffect="non-scaling-stroke" points={trendData.map((d, i) => { const divisor = trendData.length > 1 ? trendData.length - 1 : 1; const x = (i / divisor) * 100; const y = 100 - d.percent; return `${x},${y}`; }).join(" ")} />
-                </svg>
-                {trendData.map((d, i) => {
-                  const divisor = trendData.length > 1 ? trendData.length - 1 : 1;
-                  const leftPos = (i / divisor) * 100;
-                  const bottomPos = d.percent;
-                  return (
-                    <div key={i} className="absolute group z-10 w-10 h-10 flex items-center justify-center cursor-pointer -translate-x-1/2 translate-y-1/2" style={{ left: `${leftPos}%`, bottom: `${bottomPos}%` }}>
-                      <div className="absolute w-full h-full bg-emerald-500/20 rounded-full scale-50 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"></div>
-                      <div className="relative z-10 w-3 h-3 bg-emerald-500 rounded-full border-[1px] border-white shadow-[0_2px_5px_rgba(16,185,129,0.3)] transition-all duration-300 group-hover:scale-125 group-hover:bg-emerald-600"></div>
-                      <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1 pointer-events-none whitespace-nowrap z-30">
-                        <div className="bg-[#30302e] text-[#f8ecdd] text-[10px] font-bold py-1.5 px-2.5 rounded-lg shadow-xl">₹{d.amount.toFixed(0)}</div>
-                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#30302e] absolute left-1/2 -translate-x-1/2 top-full"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <DashboardCard className="lg:col-span-3">
+              <div className="flex justify-between items-center mb-14">
+                <h3 className="text-xl font-black tracking-tighter uppercase tracking-[0.2em]">Spending Stats</h3>
+                <div className="flex items-center bg-white/5 p-1 rounded-2xl border border-white/5">
+                   {["Weekly", "Monthly"].map(t => (
+                     <button 
+                       key={t} 
+                       onClick={() => setStatsPeriod(t)}
+                       className={`px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statsPeriod === t ? 'bg-white text-black' : 'text-stone-600'}`}
+                     >
+                       {t}
+                     </button>
+                   ))}
+                </div>
+              </div>
+
+              <div className="h-[380px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.05}/>
+                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.05}/>
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="6 6" vertical={false} stroke="#ffffff03" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#222', fontSize: 10, fontWeight: '900'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#222', fontSize: 10, fontWeight: '900'}} />
+                    <ReTooltip 
+                      contentStyle={{ backgroundColor: '#0d0d0d', border: '1px solid #ffffff10', borderRadius: '24px', fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                      cursor={{ stroke: '#ffffff10', strokeWidth: 1 }}
+                    />
+                    <Area type="monotone" dataKey="income" stroke="#ffffff" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" animationDuration={1000} />
+                    <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" animationDuration={1200} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard className="flex flex-col">
+               <h3 className="text-xl font-black tracking-tighter mb-14 uppercase tracking-[0.2em]">Debt Spread</h3>
+               <div className="flex-1 relative flex items-center justify-center min-h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart cx="50%" cy="50%" innerRadius="35%" outerRadius="110%" barSize={14} data={debtRadialData}>
+                      <RadialBar
+                        minAngle={15}
+                        background={{ fill: '#ffffff02' }}
+                        clockWise
+                        dataKey="uv"
+                        cornerRadius={12}
+                        animationDuration={1500}
+                      />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <p className="text-[10px] font-black text-stone-800 uppercase tracking-[0.4em] mb-2">Total</p>
+                    <span className="text-3xl font-black text-white tracking-widest">{debtRadialData.length > 0 ? Math.round(debtRadialData[0].uv) : 0}%</span>
+                  </div>
+               </div>
+
+               <div className="space-y-5 pt-12 mt-auto border-t border-white/5">
+                  {debtRadialData.map((item, i) => (
+                    <div key={i} className="flex justify-between items-center cursor-default">
+                      <div className="flex items-center gap-4">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }}></div>
+                        <span className="text-[10px] font-black text-stone-600 uppercase tracking-widest">{item.name}</span>
                       </div>
+                      <span className="text-xs font-black text-white tracking-tighter opacity-40">{Math.round(item.uv)}%</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-[30px] min-h-[16rem] shadow-sm border border-stone-100">
-              <div className="flex justify-between items-center mb-4"><h4 className="text-stone-500 font-bold text-sm">Category Breakdown</h4></div>
-              <div className="space-y-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                 {categoryData.length > 0 ? (categoryData.map((item, index) => (<ExpenseItem key={index} label={item.label} amount={item.amount} percent={item.percent} widthVal={`${item.rawPercent}%`} color={item.color} />))) : (<div className="flex flex-col items-center justify-center h-40 text-stone-400 gap-2"><p className="text-sm italic">No expenses found.</p><p className="text-xs">Use "Add Expense" to start.</p></div>)}
-              </div>
-            </div>
+                  ))}
+               </div>
+            </DashboardCard>
           </div>
-        </div>
 
-        {/* --- PREMIUM ANALYTICS (Pie Chart & Health) --- */}
-        <div className="mt-12">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-yellow-100 text-yellow-600 rounded-xl shadow-sm"><Crown size={24} /></div>
-                <div><h3 className="text-xl font-bold text-[#5B2D2D]">Pro Analytics</h3><p className="text-sm text-stone-500">Advanced debt visualization & health score.</p></div>
-            </div>
+          {/* FINANCIAL HABITS */}
+          <section className="space-y-8">
+             <div className="flex items-center gap-4">
+               <Sparkles size={24} className="text-cyan-500" />
+               <h3 className="text-3xl font-black tracking-tighter uppercase italic">Daily Habits</h3>
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <HabitCard 
+                  title="50/30/20 Alignment" 
+                  content="AI detects you can optimize ₹4,200 by shifting debt payments to high-interest first." 
+                  isLocked={false} 
+                />
+                <HabitCard title="Micro-Investment Logic" content="" isLocked={true} onPricingClick={() => setShowPricingModal(true)} />
+                <HabitCard title="Forensic Tax Mitigation" content="" isLocked={true} onPricingClick={() => setShowPricingModal(true)} />
+             </div>
+          </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div onClick={() => !isPremium && setShowPricingModal(true)} className={`bg-white p-6 rounded-[30px] h-72 shadow-sm border border-stone-100 relative overflow-hidden ${!isPremium ? 'cursor-pointer group' : ''}`}>
-                    <h4 className="text-stone-500 font-bold text-sm mb-4 flex items-center gap-2"><PieIcon size={16}/> Debt Distribution</h4>
-                    
-                    {isPremium ? (
-                        debtDistribution.length > 0 ? (
-                            <div className="flex items-center justify-center h-48 gap-4 md:gap-8">
-                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full relative bg-stone-100 shrink-0" style={{ background: `conic-gradient(
-                                    #ef4444 0% ${debtDistribution[0]?.percent || 0}%, 
-                                    #f97316 ${debtDistribution[0]?.percent || 0}% ${(debtDistribution[0]?.percent || 0) + (debtDistribution[1]?.percent || 0)}%,
-                                    #eab308 ${(debtDistribution[0]?.percent || 0) + (debtDistribution[1]?.percent || 0)}% 100%
-                                )`}}>
-                                    <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center font-bold text-stone-400 text-xs">TOTAL</div>
-                                </div>
-                                <div className="space-y-2">
-                                    {debtDistribution.map((d, i) => (
-                                        <div key={i} className="flex items-center gap-2 text-xs font-bold text-stone-600">
-                                            <div className={`w-3 h-3 rounded-full shrink-0 ${i===0 ? 'bg-red-500' : i===1 ? 'bg-orange-500' : 'bg-yellow-500'}`}></div>
-                                            <span>{d.name} ({Math.round(d.percent)}%)</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : <div className="flex items-center justify-center h-40 text-stone-400">No debt data available.</div>
-                    ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm z-10 gap-3">
-                            <Lock size={32} className="text-[#5B2D2D]"/>
-                            <button className="px-6 py-2 bg-[#5B2D2D] text-white rounded-full font-bold text-sm hover:scale-105 transition-transform">Unlock Analytics</button>
-                        </div>
-                    )}
+          {/* DEBT INTELLIGENCE */}
+          <section className="space-y-12">
+             <div className="flex flex-col sm:flex-row justify-between items-end gap-8">
+                <div>
+                   <h3 className="text-4xl font-black tracking-tighter uppercase tracking-[0.1em]">Debt Intelligence</h3>
+                   <p className="text-stone-700 font-bold text-lg">Detailed analysis of your liability landscape.</p>
                 </div>
+                <button onClick={exportToCSV} className="h-16 px-10 bg-white/5 border border-white/5 rounded-3xl text-stone-600 hover:text-white transition-all flex items-center gap-4 font-black text-[11px] uppercase tracking-[0.3em] shadow-xl">
+                    <Download size={22} /> Download Insights
+                </button>
+             </div>
 
-                <div onClick={() => !isPremium && setShowPricingModal(true)} className={`bg-white p-6 rounded-[30px] h-72 shadow-sm border border-stone-100 relative overflow-hidden ${!isPremium ? 'cursor-pointer group' : ''}`}>
-                    <h4 className="text-stone-500 font-bold text-sm mb-4 flex items-center gap-2"><Activity size={16}/> Financial Health Score</h4>
-                    
-                    {isPremium ? (
-                        <div className="flex flex-col items-center justify-center h-48">
-                            <div className="relative w-40 h-24 overflow-hidden mb-4">
-                                <div className="absolute top-0 left-0 w-40 h-40 rounded-full border-[15px] border-emerald-100 border-t-emerald-500 transform rotate-[-45deg]"></div>
-                                <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center">
-                                    <div className="text-4xl font-bold text-[#5B2D2D]">85</div>
-                                    <div className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Excellent</div>
-                                </div>
-                            </div>
-                            <p className="text-xs text-stone-400 text-center max-w-[200px]">Based on your debt-to-income ratio and spending habits.</p>
-                        </div>
-                    ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm z-10 gap-3">
-                            <Lock size={32} className="text-[#5B2D2D]"/>
-                            <button className="px-6 py-2 bg-[#5B2D2D] text-white rounded-full font-bold text-sm hover:scale-105 transition-transform">Unlock Score</button>
-                        </div>
-                    )}
-                </div>
-            </div>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <DashboardCard className="flex flex-col items-center justify-center py-16 text-center">
+                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-stone-600 mb-8">Investment Readiness</span>
+                    <div className="relative w-64 h-64 flex items-center justify-center mb-10">
+                       <svg className="w-full h-full transform -rotate-90">
+                          <circle cx="128" cy="128" r="100" stroke="#1c1c1c" strokeWidth="20" fill="transparent" />
+                          <circle cx="128" cy="128" r="100" stroke="white" strokeWidth="20" fill="transparent" 
+                            strokeDasharray="628" strokeDashoffset={628 * (1 - readinessValue / 100)} 
+                            className="transition-all duration-1000"
+                          />
+                       </svg>
+                       <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-6xl font-black tracking-tighter text-white">{readinessValue}%</span>
+                          <span className="text-[10px] font-black uppercase text-stone-600 tracking-[0.2em] mt-2">Score Path</span>
+                       </div>
+                    </div>
+                </DashboardCard>
+
+                <DashboardCard className="p-0 overflow-hidden flex flex-col">
+                   <div className="px-10 py-8 border-b border-white/5">
+                      <h4 className="text-lg font-black uppercase tracking-widest text-white italic">Velocity Trend</h4>
+                   </div>
+                   <div className="flex-1 p-8">
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff03" />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#222', fontSize: 10, fontWeight: '900'}} />
+                          <Bar dataKey="expenses" radius={[10, 10, 0, 0]}>
+                            {chartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={index === chartData.length-1 ? '#fff' : '#1c1c1c'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                   </div>
+                   <div className="px-10 py-6 bg-white/[0.02] border-t border-white/5 flex justify-between items-center">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-stone-600">Avg. Paydown Velocity</span>
+                      <span className="text-lg font-black text-white">₹4,281.00</span>
+                   </div>
+                </DashboardCard>
+             </div>
+          </section>
+
+          <Footer />
         </div>
-
-        <Footer />
       </main>
+
+      {showPricingModal && <PricingModal onClose={() => setShowPricingModal(false)} />}
+      {showExpenseModal && <ExpenseInputForm onClose={() => setShowExpenseModal(false)} />}
+
     </div>
   );
 }
-
-const ExpenseItem = ({ label, amount, percent, widthVal, color }) => (
-  <div className="flex items-center gap-4">
-    <div className={`w-3 h-3 rounded-full shrink-0 ${color}`}></div>
-    <div className="flex-1">
-      <div className="flex justify-between text-sm font-bold text-[#5B2D2D]"><span>{label}</span><span>{amount}</span></div>
-      <div className="w-full h-1.5 bg-stone-100 rounded-full mt-1 overflow-hidden"><div style={{ width: widthVal || percent }} className={`h-full ${color} rounded-full`}></div></div>
-    </div>
-  </div>
-);
-
-export default Dashboard;

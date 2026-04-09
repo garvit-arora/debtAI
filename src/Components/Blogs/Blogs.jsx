@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "../ui/Sidebar";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext";
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -9,462 +10,439 @@ import {
   User, 
   ChevronRight, 
   ShieldCheck, 
-  DollarSign,
-  PieChart,
-  TrendingUp,
-  Umbrella,
-  BrainCircuit,
-  Briefcase,
-  FileText,
-  Coffee,
-  Sparkles,
-  MessageSquare,
-  Menu, // Added Menu Icon
-  X // Added X Icon
+  PieChart, 
+  TrendingUp, 
+  Sparkles, 
+  MessageSquare, 
+  Menu, 
+  X,
+  Search,
+  Filter,
+  ArrowUpRight,
+  ChevronDown
 } from "lucide-react";
 
-// --- UPDATED BLOG CONTENT WITH AI SUGGESTIONS ---
+// --- IMAGES ---
+const HERO_IMG = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"; 
+const CREDIT_IMG = "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2011&auto=format&fit=crop";
+const BUDGET_IMG = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop";
+const DEBT_IMG = "https://images.unsplash.com/photo-1543286386-2e659306cd6c?q=80&w=2070&auto=format&fit=crop";
+const INVEST_IMG = "https://images.unsplash.com/photo-1611974714471-da0722108133?q=80&w=2070&auto=format&fit=crop";
+const PSYCH_IMG = "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop";
+const EMI_IMG = "https://images.unsplash.com/photo-1579621970795-87faff2f9160?q=80&w=2070&auto=format&fit=crop";
+const EMERGENCY_IMG = "https://images.unsplash.com/photo-1454165205744-3b78555e5572?q=80&w=2070&auto=format&fit=crop";
+const TAX_IMG = "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop";
+const PASSIVE_IMG = "https://images.unsplash.com/photo-1591696208162-a9774946e6ca?q=80&w=2070&auto=format&fit=crop";
+const AI_IMG = "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1932&auto=format&fit=crop";
+
 const BLOG_DATA = [
   {
     id: 1,
     category: "Credit Health",
-    icon: <ShieldCheck size={20} />,
-    title: "The Ultimate Guide to Mastering Your Credit Score",
-    excerpt: "Your credit score is the most important number in your financial life. Learn how to repair, build, and maintain a score that opens doors.",
-    author: "DebtAI Financial Team",
-    date: "Jan 8, 2026",
-    readTime: "8 min read",
-    questions: [
-      "Write me a Goodwill Letter template to remove a late payment.",
-      "Explain the Azul Method for credit utilization in detail.",
-      "How exactly do I dispute an error on my credit report?"
-    ],
+    image: CREDIT_IMG,
+    title: "Mastering Your Credit Score",
+    excerpt: "Your credit score is the key to financial mobility. Learn how to repair, build, and maintain a score that opens doors.",
+    author: "Garvit Arora",
+    date: "Jan 12, 2026",
+    readTime: "12 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <p className="text-xl font-medium text-[#5B2D2D]">
-          Your credit score isn't just a number—it's a key that unlocks lower interest rates, better housing options, and even job opportunities.
+      <div className="space-y-8">
+        <p className="text-xl font-medium text-white leading-relaxed">
+          The three-digit number that dictates your financial destiny. Whether you're applying for a mortgage, a car loan, or a new credit card, your credit score is the first thing lenders see.
         </p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">What Actually Makes Up Your Score?</h3>
-        <p>FICO and VantageScore use slightly different models, but the core components remain consistent.</p>
-        <ul className="list-disc pl-5 space-y-2">
-          <li><strong>Payment History (35%):</strong> The single biggest factor. Did you pay on time?</li>
-          <li><strong>Credit Utilization (30%):</strong> Ratio of current debt to credit limit. Keep it under 30%.</li>
-          <li><strong>Length of Credit History (15%):</strong> Older accounts are better. Don't close old cards!</li>
-          <li><strong>Credit Mix (10%):</strong> A mix of revolving (cards) and installment (loans) debt is healthy.</li>
-          <li><strong>New Credit (10%):</strong> Don't apply for too many cards at once.</li>
-        </ul>
-
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Actionable Strategies</h3>
-        <h4 className="text-xl font-bold text-[#5B2D2D] mt-4">1. The 'Azul' Method</h4>
-        <p>Pay off your balance <strong>3 days before</strong> the statement closes. This forces the issuer to report a ₹0 balance (0% utilization) to bureaus.</p>
-
-        <h4 className="text-xl font-bold text-[#5B2D2D] mt-4">2. Become an Authorized User</h4>
-        <p>Piggyback off a parent or partner's good credit history by getting added to their card.</p>
+        <h3 className="text-3xl font-black italic uppercase tracking-tighter">The Calculation Protocol</h3>
+        <p>Your score isn't random. It's built on a proprietary weighting of your financial behavior:</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-10">
+            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                <h4 className="font-black text-white mb-2 uppercase text-xs tracking-widest">Payment History (35%)</h4>
+                <p className="text-sm text-stone-500">The most critical factor. One late payment can slash your score significantly.</p>
+            </div>
+            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                <h4 className="font-black text-white mb-2 uppercase text-xs tracking-widest">Credit Utilization (30%)</h4>
+                <p className="text-sm text-stone-500">The ratio of your used credit vs total limit. Aim for under 10% for elite status.</p>
+            </div>
+        </div>
+        <h3 className="text-3xl font-black italic uppercase tracking-tighter">Forensic Repair Strategies</h3>
+        <p>If your score is suppressed, the remediation process begins with accuracy. Under the FCRA, you have the right to challenge inaccuracies. AI DebtAI identifies these discrepancies automatically, saving you months of manual auditing.</p>
       </div>
     )
   },
   {
     id: 2,
-    category: "Budgeting",
-    icon: <PieChart size={20} />,
-    title: "The Art of Sorting Finances: Budgeting 101",
-    excerpt: "Budgeting isn't about restriction; it's about permission. Learn how to sort your income into buckets that guarantee wealth.",
-    author: "Sarah Jenkins, CPA",
-    date: "Jan 6, 2026",
-    readTime: "6 min read",
-    questions: [
-      "Create a 50/30/20 budget for a ₹4,000 monthly income.",
-      "What are some examples of Sinking Funds I should have?",
-      "How do I do Zero-Based budgeting if my income varies?"
-    ],
+    category: "Debt Strategy",
+    image: DEBT_IMG,
+    title: "Snowball vs Avalanche Method",
+    excerpt: "Choosing between psychological wins and mathematical efficiency. Which strategy fits your financial personality?",
+    author: "Strategy Team",
+    date: "Jan 10, 2026",
+    readTime: "10 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <p className="text-xl font-medium text-[#5B2D2D]">
-          A budget is simply telling your money where to go instead of wondering where it went.
+      <div className="space-y-8">
+        <p className="text-xl font-medium text-white leading-relaxed">
+          Debt is a mathematical problem that often requires a psychological solution. The two most prominent strategies offer different entry points into freedom.
         </p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The 50/30/20 Rule</h3>
-        <ul className="list-disc pl-5 space-y-2">
-          <li><strong>50% Needs:</strong> Housing, utilities, groceries.</li>
-          <li><strong>30% Wants:</strong> Dining out, Netflix, hobbies.</li>
-          <li><strong>20% Savings/Debt:</strong> Future you fund.</li>
-        </ul>
-
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The Bucket Strategy</h3>
-        <p>Use separate bank accounts to physically separate your money:</p>
-        <ol className="list-decimal pl-5 space-y-4">
-          <li><strong>Bills Account:</strong> Fixed costs only.</li>
-          <li><strong>Spending Account:</strong> Groceries and gas.</li>
-          <li><strong>Fun Account:</strong> Guilt-free spending.</li>
-        </ol>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 py-10">
+          <div className="space-y-4">
+             <h4 className="text-2xl font-black text-white uppercase italic">The Snowball</h4>
+             <p className="text-stone-400">Order by balance size. Pay the smallest first. Why? Quick wins trigger dopamine, creating the momentum needed for larger hurdles.</p>
+          </div>
+          <div className="space-y-4">
+             <h4 className="text-2xl font-black text-white uppercase italic">The Avalanche</h4>
+             <p className="text-stone-400">Order by Interest Rate. Mathematically superior. You pay the least amount of interest over time, though psychological wins take longer.</p>
+          </div>
+        </div>
+        <p className="italic border-l-4 border-white pl-8 py-4 text-stone-500 text-lg">"The best plan is the one you actually stick to. DebtAI simulates both to show you exactly how much time vs money you trade."</p>
       </div>
     )
   },
   {
     id: 3,
-    category: "Debt Strategy",
-    icon: <TrendingUp size={20} />,
-    title: "Snowball vs. Avalanche: The Math vs. The Psychology",
-    excerpt: "Two methods, one goal: Debt Freedom. Should you pay the smallest balance first or the highest interest?",
-    author: "DebtAI Strategy Team",
-    date: "Jan 5, 2026",
-    readTime: "10 min read",
-    questions: [
-      "Simulate a Debt Snowball for 3 debts: ₹5000, ₹20000, ₹50000.",
-      "Why does the Avalanche method save more money?",
-      "Can I switch from Snowball to Avalanche halfway through?"
-    ],
+    category: "Budgeting",
+    image: BUDGET_IMG,
+    title: "The 50/30/20 Rule: A Framework",
+    excerpt: "Stop guessing and start allocating. This simple ratio ensures growth while allowing for lifestyle enjoyment.",
+    author: "Budgeting Dept.",
+    date: "Jan 08, 2026",
+    readTime: "9 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <p className="text-xl font-medium text-[#5B2D2D]">
-          Who gets paid first? The answer depends on whether you are motivated by math or by emotion.
+      <div className="space-y-8">
+        <p className="text-xl font-medium text-white leading-relaxed">
+          Complex budgeting systems often fail because they are too rigid. The 50/30/20 rule is a fluid framework designed for sustainable wealth.
         </p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The Debt Snowball (Psychology)</h3>
-        <p>List debts smallest to largest. Pay minimums on all, attack the smallest. The quick wins release dopamine and keep you motivated.</p>
-
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The Debt Avalanche (Math)</h3>
-        <p>List debts highest interest rate to lowest. Mathematically saves the most money, but requires patience.</p>
+        <ul className="space-y-6">
+            <li className="flex items-start gap-4">
+                <span className="text-4xl font-black text-stone-800">50</span>
+                <div>
+                   <h5 className="font-black text-white uppercase tracking-widest text-xs mb-1">Needs</h5>
+                   <p className="text-stone-500">Essential survivability—housing, food, utilities, minimum debt payments.</p>
+                </div>
+            </li>
+            <li className="flex items-start gap-4">
+                <span className="text-4xl font-black text-stone-800">30</span>
+                <div>
+                   <h5 className="font-black text-white uppercase tracking-widest text-xs mb-1">Wants</h5>
+                   <p className="text-stone-500">Lifestyle choices—dining, entertainment, hobbies. This prevents burnout.</p>
+                </div>
+            </li>
+            <li className="flex items-start gap-4">
+                <span className="text-4xl font-black text-stone-800">20</span>
+                <div>
+                   <h5 className="font-black text-white uppercase tracking-widest text-xs mb-1">Financial Progress</h5>
+                   <p className="text-stone-500">The wealth engine—extra debt payments, retirement funding, emergency savings.</p>
+                </div>
+            </li>
+        </ul>
       </div>
     )
   },
   {
     id: 4,
-    category: "Savings",
-    icon: <Umbrella size={20} />,
-    title: "Emergency Funds: Your Financial Airbag",
-    excerpt: "Life hits hard. Without a cushion, a flat tire becomes a debt spiral. Here is exactly how much you need.",
-    author: "Alex Morgan",
-    date: "Jan 4, 2026",
-    readTime: "5 min read",
-    questions: [
-      "Where can I find high-yield savings accounts?",
-      "Is ₹1,000 enough for a starter emergency fund?",
-      "Should I invest my emergency fund in stocks?"
-    ],
+    category: "Investing",
+    image: INVEST_IMG,
+    title: "Transitioning Debt to Wealth",
+    excerpt: "The exact moment you should stop aggressive debt paydown and start compound interest aggregation.",
+    author: "Investment Team",
+    date: "Jan 05, 2026",
+    readTime: "15 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <p className="text-xl font-medium text-[#5B2D2D]">
-          60% of people cannot cover a ₹50,000 emergency. This is the "Debt Trap."
-        </p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Phase 1: The Starter Fund</h3>
-        <p>Save ₹10,000 to ₹20,000 immediately. Keep it in a separate bank account.</p>
-
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Phase 2: 3-6 Months</h3>
-        <p>Once debt is gone, build a fund that covers 3-6 months of essential living expenses.</p>
+      <div className="space-y-8">
+        <p className="text-xl font-medium text-white leading-relaxed">The opportunity cost of debt isn't just interest—it's the wealth you aren't building while your capital is tied up in liabilities.</p>
+        <p>The cardinal rule: If your debt interest rate is lower than your expected market return, you build wealth faster by investing. However, the psychological 'freedom' of zero debt often outweighs the 1-2% mathematical gain.</p>
       </div>
     )
   },
   {
     id: 5,
-    category: "Investing",
-    icon: <DollarSign size={20} />,
-    title: "Investing for Beginners: Stocks, Bonds & ETFs",
-    excerpt: "The stock market isn't a casino if you do it right. Learn the power of compound interest.",
-    author: "DebtAI Investment Desk",
-    date: "Jan 3, 2026",
-    readTime: "12 min read",
-    questions: [
-      "Explain what an ETF is like I'm 5 years old.",
-      "Calculate compound interest on ₹25,000/month for 30 years.",
-      "What is the S&P 500?"
-    ],
+    category: "Psychology",
+    image: PSYCH_IMG,
+    title: "The Psychology of Spending",
+    excerpt: "Why we buy things we don't need with money we don't have. Understanding the Dopamine Trap.",
+    author: "Behavioral Analysis",
+    date: "Jan 02, 2026",
+    readTime: "11 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <p className="text-xl font-medium text-[#5B2D2D]">
-          Investing is the only way to beat inflation. It is not about picking stocks; it's about buying the economy.
-        </p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Vocabulary</h3>
-        <ul className="list-disc pl-5 space-y-2">
-          <li><strong>Stock:</strong> Ownership in a company.</li>
-          <li><strong>ETF:</strong> A basket of hundreds of stocks (safer).</li>
-        </ul>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Compound Interest</h3>
-        <p>Investing ₹25,000/month starting at age 25 results in ₹77.2 Million by age 65 (assuming 8% return).</p>
-      </div>
-    )
+        <div className="space-y-8">
+          <p className="text-xl font-medium text-white leading-relaxed">Our brains are hardwired for instant gratification, a vestige of our hunter-gatherer past where resources were scarce and temporary.</p>
+          <p>Modern marketing leverages this biology. Every 'one-click buy' is a carefully engineered dopamine delivery system. Recognizing the 'Vantage Point' of your spending impulses is the first step toward decoupling your emotions from your bank account.</p>
+        </div>
+      )
   },
   {
     id: 6,
-    category: "Psychology",
-    icon: <BrainCircuit size={20} />,
-    title: "The Psychology of Money: Why We Spend",
-    excerpt: "Discover the hidden biases like the Diderot Effect that drain your wallet.",
-    author: "Dr. Elena Vance",
-    date: "Jan 2, 2026",
-    readTime: "9 min read",
-    questions: [
-      "How do I stop 'Lifestyle Creep'?",
-      "What is the Diderot Effect?",
-      "Give me tips to stop impulse buying."
-    ],
+    category: "Interest Trap",
+    image: EMI_IMG,
+    title: "Navigating the EMI Interest Trap",
+    excerpt: "Low monthly payments are the ultimate illusion. Learn how the amortization schedule hides the real cost.",
+    author: "Forensic Audit",
+    date: "Dec 30, 2025",
+    readTime: "14 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <p className="text-xl font-medium text-[#5B2D2D]">
-          Money isn't about math. It's about behavior.
-        </p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The Diderot Effect</h3>
-        <p>One new purchase leads to a spiral of consumption. You buy a new dress, so you need new shoes, then new jewelry.</p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Retail Therapy</h3>
-        <p>Use the <strong>72-Hour Rule</strong>. Wait 3 days before buying non-essentials.</p>
-      </div>
-    )
+        <div className="space-y-8">
+          <p className="text-xl font-medium text-white leading-relaxed">The danger of EMI is that it masks the total price through 'affordability' focused on monthly outflow rather than total cost of ownership.</p>
+          <p>A ₹50,000 product at 15% interest for 24 months costs drastically more than a 6-month tenure. DebtAI's Velocity Meter shows you the 'Total Interest Leak' in real-time.</p>
+        </div>
+      )
   },
   {
     id: 7,
-    category: "Income",
-    icon: <Briefcase size={20} />,
-    title: "Side Hustles: Passive Income in 2026",
-    excerpt: "You can't budget your way out of poverty. Sometimes you need a bigger shovel.",
-    author: "DebtAI Financial Team",
-    date: "Jan 1, 2026",
-    readTime: "7 min read",
-    questions: [
-      "List 5 side hustles with ₹0 startup cost.",
-      "How can I sell digital products?",
-      "What is 'Service Arbitrage'?"
-    ],
+    category: "Security",
+    image: EMERGENCY_IMG,
+    title: "Building an Emergency Fortress",
+    excerpt: "Why 3 months isn't always enough and how to calculate your personalized 'Stability Index'.",
+    author: "Risk Management",
+    date: "Dec 25, 2025",
+    readTime: "8 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">1. Digital Products</h3>
-        <p>Sell templates, guides, or courses. Create once, sell forever.</p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">2. Arbitrage</h3>
-        <p>Buy low at thrift stores, sell high on eBay.</p>
-      </div>
-    )
+        <div className="space-y-8">
+          <p className="text-xl font-medium text-white leading-relaxed">An emergency fund is insurance for your sanity. Without it, one flat tire can derail a year of debt paydown.</p>
+          <p>We recommend a Tiered approach: 1 month of 'Survival' cash (liquid), followed by 5 months of 'Architectural' stability (HYSAs or low-risk bonds).</p>
+        </div>
+      )
   },
   {
     id: 8,
-    category: "Retirement",
-    icon: <Clock size={20} />,
-    title: "Retirement Planning: It's Never Too Early",
-    excerpt: "How to build your nest egg using 401ks, Roth IRAs, and HSAs.",
-    author: "Sarah Jenkins, CPA",
-    date: "Dec 28, 2025",
-    readTime: "9 min read",
-    questions: [
-      "What is the difference between Roth IRA and Traditional IRA?",
-      "Explain the 4% rule for retirement.",
-      "Why is an HSA called a secret weapon?"
-    ],
+    category: "Tax Logic",
+    image: TAX_IMG,
+    title: "Tax Optimization for High Earners",
+    excerpt: "It's not about how much you make, but how much you keep. Intelligent deduction mapping.",
+    author: "Tax Architect",
+    date: "Dec 20, 2025",
+    readTime: "13 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Order of Operations</h3>
-        <ol className="list-decimal pl-5 space-y-2">
-            <li>401(k) Match (Free money)</li>
-            <li>Roth IRA (Tax-free growth)</li>
-            <li>HSA (Triple tax advantage)</li>
-        </ol>
-      </div>
-    )
+        <div className="space-y-8">
+          <p className="text-xl font-medium text-white leading-relaxed">Tax is your largest single expense. Treating it as a passive cost is an architectural failure.</p>
+          <p>From 401k/HSA stacking to standard vs itemized auditing, we dissect the logic layers used by the top 1% to reduce their fiscal footprint.</p>
+        </div>
+      )
   },
   {
     id: 9,
-    category: "Taxes",
-    icon: <FileText size={20} />,
-    title: "Navigating Taxes: Deductions & Credits",
-    excerpt: "Learn the legal ways to reduce your tax liability through strategic planning.",
-    author: "DebtAI Financial Team",
-    date: "Dec 20, 2025",
-    readTime: "11 min read",
-    questions: [
-      "What is the difference between a tax credit and a deduction?",
-      "Can I deduct student loan interest?",
-      "What is tax loss harvesting?"
-    ],
+    category: "Passive Income",
+    image: PASSIVE_IMG,
+    title: "The Reality of Passive Income",
+    excerpt: "Moving past the 'Beach Side Laptop' myth into real dividend and rental yield strategies.",
+    author: "Wealth Dept.",
+    date: "Dec 15, 2025",
+    readTime: "16 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Deductions vs Credits</h3>
-        <p><strong>Credits</strong> are better. They reduce your tax bill dollar-for-dollar. <strong>Deductions</strong> just lower your taxable income.</p>
-      </div>
-    )
+        <div className="space-y-8">
+          <p className="text-xl font-medium text-white leading-relaxed">Passive income isn't free—it requires either significant capital or significant time upfront.</p>
+          <p>Dividends, Index Funds, and REITs are the primary paths for the debt-conscious investor. Each has a 'Time-to-Yield' coefficient that must align with your payoff velocity.</p>
+        </div>
+      )
   },
   {
     id: 10,
-    category: "Lifestyle",
-    icon: <Coffee size={20} />,
-    title: "Frugal Living: Saving Without Misery",
-    excerpt: "Spend extravagantly on what you love and cut costs mercilessly on what you don't.",
-    author: "Alex Morgan",
-    date: "Dec 15, 2025",
-    readTime: "6 min read",
-    questions: [
-      "How can I negotiate my car insurance bill?",
-      "What are the 'Big Three' expenses to cut?",
-      "Give me cheap meal prep ideas."
-    ],
+    category: "AI Revolution",
+    image: AI_IMG,
+    title: "AI & The Future of Money",
+    excerpt: "How neural networks are replacing spreadsheet-based financial planning for elite accuracy.",
+    author: "Architecture Lab",
+    date: "Dec 10, 2025",
+    readTime: "10 min read",
     content: (
-      <div className="space-y-6 text-stone-700 leading-relaxed">
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">The Big Three</h3>
-        <p>Housing, Transportation, Food. Cut here to make a real impact.</p>
-        <h3 className="text-2xl font-bold text-[#5B2D2D] mt-8">Negotiate Everything</h3>
-        <p>Call your internet and insurance providers annually to ask for better rates.</p>
-      </div>
-    )
+        <div className="space-y-8">
+          <p className="text-xl font-medium text-white leading-relaxed">Spreadsheets are static records of the past. AI is a dynamic predictor of the future.</p>
+          <p>By analyzing thousands of data points across global markets and your personal spending habits, DebtAI provides a level of forensic oversight previously reserved for institutional hedge funds.</p>
+        </div>
+      )
   }
 ];
 
 export default function Blogs() {
   const [selectedBlog, setSelectedBlog] = useState(null);
+  const [activeCategory, setActiveCategory] = useState("All");
   const navigate = useNavigate();
-  
-  // Mobile Sidebar State (Added)
+  const [showNotifications, setShowNotifications] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const filteredBlogs = activeCategory === "All" 
+    ? BLOG_DATA 
+    : BLOG_DATA.filter(b => b.category === activeCategory);
 
   const handleOpenBlog = (blog) => {
     setSelectedBlog(blog);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleBack = () => {
     setSelectedBlog(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  // --- NEW: FUNCTION TO NAVIGATE TO AI CHAT ---
-  const handleAskAI = (question) => {
-    navigate("/debtai", { state: { autoPrompt: question } });
-  };
+  const featuredBlog = BLOG_DATA[0];
 
   return (
-    <div className="flex min-h-screen bg-[#f8ecdd] font-sans relative">
+    <div className="flex min-h-screen bg-[#050505] text-white selection:bg-white selection:text-black">
       
-      {/* --- SIDEBAR LOGIC --- */}
-      
-      {/* 1. Mobile Backdrop */}
-      {isMobileMenuOpen && (
-        <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[40] md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-      
-      {/* 2. Mobile Drawer */}
-      <div className={`fixed inset-y-0 left-0 z-[50] w-64 bg-transparent transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <button 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute top-4 right-4 p-2 text-stone-200 hover:text-white z-50"
-        >
-            <X size={24} />
-        </button>
-        <Sidebar />
-      </div>
+      <Sidebar />
 
-      {/* 3. Desktop Sidebar (Fixed) */}
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
-
-      <main className="flex-1 md:ml-28 p-6 md:p-12 overflow-y-auto w-full">
-        <div className="max-w-6xl mx-auto">
-          
-          {/* Header Row (Hamburger + Title) */}
-          <div className="flex items-center gap-4 mb-4 md:mb-0">
-             <button 
-                  onClick={() => setIsMobileMenuOpen(true)}
-                  className="p-2 -ml-2 text-[#5B2D2D] hover:bg-stone-200/50 rounded-lg md:hidden"
-              >
-                  <Menu size={28} />
-             </button>
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        {/* HERO / NAVBAR INTEGRATED (ONLY IF NOT IN BLOG DETAIL) */}
+        {!selectedBlog && (
+          <div className="relative h-[65vh] w-full shrink-0">
+             <img src={HERO_IMG} alt="Hero" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80"></div>
              
-             {!selectedBlog && (
-                <div className="text-left">
-                  <h1 className="text-3xl md:text-5xl font-bold text-[#5B2D2D] mb-2">Financial Insights</h1>
-                  <p className="text-[#5B2D2D]/70 text-sm md:text-lg max-w-2xl hidden sm:block">
-                    Deep dives into credit, investing, and wealth building.
-                  </p>
+             {/* INTEGRATED NAVBAR */}
+             <div className="relative z-10 px-12 pt-8 flex items-center justify-between">
+                <div className="flex items-center gap-10">
+                   <h2 className="text-2xl font-black tracking-tighter italic uppercase text-white">Knowledge Hub<span className="text-stone-800">.</span></h2>
+                   <div className="hidden lg:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                      <button className="hover:text-white transition-none">Strategy</button>
+                      <button className="hover:text-white transition-none">Security</button>
+                      <button className="hover:text-white transition-none">Investment</button>
+                   </div>
                 </div>
-              )}
-          </div>
-          {/* Mobile only subtitle */}
-          {!selectedBlog && <p className="text-[#5B2D2D]/70 text-sm mb-8 sm:hidden">Deep dives into credit, investing, and wealth building.</p>}
+                <div className="flex items-center gap-6">
+                   <div className="hidden sm:flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2 gap-3">
+                      <Search size={14} className="text-stone-600" />
+                      <input type="text" placeholder="Search insights..." className="bg-transparent outline-none text-[10px] font-black uppercase tracking-widest w-48 placeholder:text-stone-700" />
+                   </div>
+                   <button onClick={() => navigate('/premium')} className="px-6 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-2xl">Access Premium</button>
+                </div>
+             </div>
 
+             {/* HERO CONTENT */}
+             <div className="absolute bottom-20 left-12 right-12 z-10 max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+                <div className="flex items-center gap-4">
+                   <span className="px-5 py-2 bg-white text-black text-[9px] font-black uppercase tracking-widest rounded-full">{featuredBlog.category}</span>
+                   <span className="text-white/40 text-[9px] font-black uppercase tracking-widest">Featured Analysis</span>
+                </div>
+                <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase italic">{featuredBlog.title}</h1>
+                <p className="text-stone-400 text-lg font-medium max-w-2xl leading-relaxed">{featuredBlog.excerpt}</p>
+                <div className="flex items-center gap-8 pt-4">
+                   <div className="flex items-center gap-4 font-black">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
+                         <User size={18} className="text-white" />
+                      </div>
+                      <span className="text-xs uppercase tracking-widest">{featuredBlog.author}</span>
+                   </div>
+                   <div className="text-[10px] font-black uppercase tracking-widest text-stone-600 flex items-center gap-2">
+                       <Clock size={14} /> {featuredBlog.readTime}
+                   </div>
+                   <button onClick={() => handleOpenBlog(featuredBlog)} className="flex items-center gap-2 text-white group">
+                      <span className="text-[10px] font-black uppercase tracking-widest">Begin Inquest</span>
+                      <ArrowUpRight size={18} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                   </button>
+                </div>
+             </div>
+          </div>
+        )}
+
+        <div className={`flex-1 overflow-y-auto px-12 pb-24 hide-scrollbar ${selectedBlog ? 'pt-12' : 'pt-24'}`}>
+          
           {selectedBlog ? (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="max-w-5xl mx-auto space-y-16 animate-in fade-in duration-500">
               <button 
                 onClick={handleBack}
-                className="flex items-center gap-2 text-[#5B2D2D]/70 hover:text-[#5B2D2D] font-bold mb-8 transition-colors group"
+                className="flex items-center gap-4 text-stone-600 mb-12"
               >
-                <div className="p-2 bg-white rounded-full group-hover:bg-[#5B2D2D]/10 transition-colors">
+                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5">
                   <ArrowLeft size={20} />
                 </div>
-                Back to Articles
+                <span className="uppercase tracking-[0.4em] text-[10px] font-black">Return to Library</span>
               </button>
 
-              <article className="bg-white rounded-[40px] shadow-sm border border-stone-100 overflow-hidden mb-12">
-                <div className="bg-[#5B2D2D] text-[#f8ecdd] p-8 md:p-16 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-12 opacity-10">
-                    <BookOpen size={200} />
-                  </div>
-                  
-                  <div className="relative z-10 max-w-3xl">
-                    <div className="flex items-center gap-3 mb-6 text-orange-200 font-bold tracking-wider uppercase text-sm">
-                      <span className="bg-white/10 px-3 py-1 rounded-full">{selectedBlog.category}</span>
-                      <span className="flex items-center gap-1"><Clock size={14} /> {selectedBlog.readTime}</span>
+              <div className="space-y-12">
+                  <header className="space-y-10">
+                    <div className="space-y-6">
+                        <span className="px-5 py-2 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest rounded-full text-stone-400">{selectedBlog.category}</span>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic leading-[0.9]">{selectedBlog.title}</h1>
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-6">{selectedBlog.title}</h1>
-                    
-                    <div className="flex items-center gap-6 text-white/80 text-sm font-medium">
-                      <div className="flex items-center gap-2"><User size={16} />{selectedBlog.author}</div>
-                      <div className="flex items-center gap-2"><Calendar size={16} />{selectedBlog.date}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-8 md:p-16 max-w-4xl mx-auto">
-                  {selectedBlog.content}
-                </div>
-              </article>
-
-              {/* --- NEW: AI SUGGESTION BOXES --- */}
-              <div className="max-w-4xl mx-auto mb-12">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-purple-100 text-purple-600 rounded-xl">
-                        <Sparkles size={24} />
-                    </div>
-                    <h3 className="text-2xl font-bold text-[#5B2D2D]">Have questions about this?</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {selectedBlog.questions.map((q, idx) => (
-                        <button 
-                            key={idx}
-                            onClick={() => handleAskAI(q)}
-                            className="bg-white p-6 rounded-2xl border border-purple-100 shadow-sm hover:shadow-md hover:border-purple-300 transition-all text-left flex flex-col justify-between group h-full"
-                        >
-                            <p className="font-medium text-stone-700 mb-4 group-hover:text-purple-700 transition-colors">"{q}"</p>
-                            <div className="flex items-center gap-2 text-xs font-bold text-purple-400 uppercase tracking-wider group-hover:text-purple-600">
-                                <MessageSquare size={14} />
-                                Ask AI
+                    <div className="flex items-center justify-between py-10 border-y border-white/5">
+                        <div className="flex items-center gap-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5"><User size={20} className="text-stone-400" /></div>
+                                <div className="text-left">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-stone-700">Analyst</p>
+                                    <p className="text-sm font-black text-white">{selectedBlog.author}</p>
+                                </div>
                             </div>
-                        </button>
-                    ))}
-                </div>
-              </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5"><Calendar size={20} className="text-stone-400" /></div>
+                                <div className="text-left">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-stone-700">Indexed</p>
+                                    <p className="text-sm font-black text-white">{selectedBlog.date}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-stone-600">
+                            <Clock size={16} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{selectedBlog.readTime}</span>
+                        </div>
+                    </div>
+                  </header>
 
+                  <div className="relative aspect-[21/9] rounded-[48px] overflow-hidden border border-white/5 shadow-2xl">
+                     <img src={selectedBlog.image} alt={selectedBlog.title} className="w-full h-full object-cover" />
+                  </div>
+
+                  <div className="max-w-4xl text-stone-400 font-medium leading-relaxed text-lg pb-24">
+                    {selectedBlog.content}
+                  </div>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {BLOG_DATA.map((blog) => (
-                <div 
-                  key={blog.id}
-                  onClick={() => handleOpenBlog(blog)}
-                  className="group bg-white p-6 rounded-[30px] border border-stone-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
-                >
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="p-4 bg-[#5B2D2D]/5 text-[#5B2D2D] rounded-2xl group-hover:bg-[#5B2D2D] group-hover:text-white transition-colors duration-300">
-                      {blog.icon}
+            <div className="space-y-20 max-w-7xl mx-auto">
+              
+              <div className="flex flex-col md:flex-row justify-between items-end gap-10">
+                  <div className="space-y-4">
+                     <h2 className="text-5xl font-black tracking-tighter uppercase italic text-white underline decoration-white/10 underline-offset-8">Inquest Catalog<span className="text-stone-800">.</span></h2>
+                     <p className="text-stone-600 font-bold text-lg">Detailed forensic intelligence across the financial spectrum.</p>
+                  </div>
+                  <div className="flex items-center gap-8 border-b border-white/5 pb-2">
+                     {["All", "Credit Health", "Debt Strategy", "Budgeting", "Psychology"].map(cat => (
+                       <button 
+                         key={cat} 
+                         onClick={() => setActiveCategory(cat)}
+                         className={`text-[10px] font-black uppercase tracking-[0.3em] pb-3 transition-all relative ${activeCategory === cat ? 'text-white' : 'text-stone-800'}`}
+                       >
+                         {cat}
+                         {activeCategory === cat && <div className="absolute bottom-0 left-0 right-0 h-1 bg-white"></div>}
+                       </button>
+                     ))}
+                  </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-20">
+                {filteredBlogs.map((blog) => (
+                  <div key={blog.id} onClick={() => handleOpenBlog(blog)} className="group cursor-pointer flex flex-col space-y-8">
+                    <div className="relative aspect-[16/10] rounded-[40px] overflow-hidden border border-white/5 shadow-2xl">
+                       <img src={blog.image} alt={blog.title} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                       <span className="absolute top-6 left-6 px-4 py-1.5 bg-black/80 backdrop-blur-md border border-white/10 rounded-full text-[8px] font-black uppercase tracking-widest text-white">{blog.category}</span>
                     </div>
-                    <span className="text-xs font-bold text-[#5B2D2D]/40 bg-stone-50 px-3 py-1 rounded-full uppercase tracking-wider">
-                      {blog.category}
-                    </span>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-stone-700">
+                           <span>{blog.date}</span>
+                           <span className="flex items-center gap-1.5"><Clock size={12} /> {blog.readTime}</span>
+                        </div>
+                        <h3 className="text-4xl font-black tracking-tighter text-white uppercase italic leading-[0.9] group-hover:text-stone-400 transition-colors">{blog.title}</h3>
+                        <p className="text-stone-600 text-sm font-bold leading-relaxed line-clamp-2">{blog.excerpt}</p>
+                    </div>
+                    <div className="pt-4 flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center"><ArrowUpRight size={18} className="text-stone-600" /></div>
+                       <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Read Documentation</span>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-[#5B2D2D] mb-3 leading-snug group-hover:text-[#8B4513] transition-colors">{blog.title}</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed mb-6 flex-1 line-clamp-3">{blog.excerpt}</p>
-                  <div className="flex items-center justify-between pt-6 border-t border-stone-100 mt-auto">
-                    <div className="flex items-center gap-2 text-xs font-bold text-stone-400"><Clock size={14} />{blog.readTime}</div>
-                    <span className="flex items-center gap-1 text-sm font-bold text-[#5B2D2D] group-hover:translate-x-1 transition-transform">Read Article <ChevronRight size={16} /></span>
+                ))}
+              </div>
+
+              {/* FOOTER CALLOUT */}
+              <div className="bg-[#0d0d0d] border border-white/5 rounded-[56px] p-20 flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden">
+                  <div className="relative z-10 space-y-8 max-w-2xl">
+                     <h3 className="text-5xl font-black tracking-tighter text-white italic uppercase leading-[0.9]">Master Your Financial Architecture.</h3>
+                     <p className="text-stone-600 text-lg font-bold leading-relaxed">Join the elite layer of tactical earners using AI-driven oversight to accelerate their path to equity.</p>
+                     <button className="bg-white text-black px-12 py-5 rounded-full font-black text-xs uppercase tracking-[0.4em] shadow-3xl active:scale-95 transition-all">Execute Onboarding</button>
                   </div>
-                </div>
-              ))}
+                  <div className="relative z-10 shrink-0">
+                     <div className="w-64 h-64 bg-white/5 border border-white/10 rounded-[48px] flex items-center justify-center p-12 rotate-12">
+                        <ShieldCheck size={120} className="text-white/20" />
+                     </div>
+                  </div>
+                  <div className="absolute right-[-10%] bottom-[-10%] w-[600px] h-[600px] bg-white/[0.01] blur-[150px] rounded-full"></div>
+              </div>
             </div>
           )}
         </div>

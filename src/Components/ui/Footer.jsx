@@ -1,223 +1,82 @@
-import React from 'react'
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useNavigate } from "react-router-dom"; 
-import {
-  BsArrowRight,
-  BsArrowUpRight,
-  BsInstagram,
-  BsLinkedin,
-  BsTwitter,
-} from "react-icons/bs";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { BsTwitter, BsLinkedin, BsInstagram, BsFacebook } from "react-icons/bs";
 import logo from '../../assets/icons/logo2.png';
 
-gsap.registerPlugin(ScrollTrigger);
-
-const footerNavLinkClass =
-  "hover:text-(--purple) transition-colors duration-300 ease-out";
-
-const Footer = ({buttonText, actionLink}) => {
-    const footerTriggerRef = useRef(null);
-    const footerRef = useRef(null);
-    const navigate = useNavigate();
-
-    // const footerTl = gsap.timeline({
-    //     scrollTrigger: {
-    //       trigger: footerTriggerRef.current, // The spacer at the bottom
-    //       start: "top bottom", // When top of spacer hits bottom of viewport
-    //       end: "bottom bottom", // When bottom of spacer hits bottom of viewport
-    //       scrub: 1, // Smooth scrubbing linked to scrollbar
-    //     },
-    //   });
-
-    useEffect(() => {
-    let ctx = gsap.context(() => {
-      const footerTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: footerTriggerRef.current, // The spacer at the bottom
-          start: "top bottom", // When top of spacer hits bottom of viewport
-          end: "bottom bottom", // When bottom of spacer hits bottom of viewport
-          scrub: 1, // Smooth scrubbing linked to scrollbar
-        },
-      });
-
-      footerTl.fromTo(
-        footerRef.current,
-        {
-          yPercent: 100, // Start completely off-screen (down)
-          backgroundColor: "rgba(28, 25, 23, 0)", // Transparent
-          backdropFilter: "blur(0px)",
-        },
-        {
-          yPercent: 0, // End filling the screen
-          backgroundColor: "rgba(28, 25, 23, 0.9)", // Dark background
-          backdropFilter: "blur(16px)", // Heavy blur
-          ease: "none",
-        }
-      );
-    });
-
-    return () => ctx.revert();
-  }, []);
-
+const Footer = () => {
   return (
-    <div>
+    <footer className="w-full bg-background border-t border-border pt-20 pb-12 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
+          
+          <div className="col-span-2 lg:col-span-2 space-y-8">
+            <Link to="/" className="flex items-center gap-3">
+              <img src={logo} alt="DebtAI" className="h-10 w-auto grayscale transition-all hover:grayscale-0" />
+              <span className="text-2xl font-black tracking-tighter">DebtAI</span>
+            </Link>
+            <p className="text-stone-500 font-medium max-w-xs leading-relaxed">
+              Empowering individuals to reclaim their financial freedom through intuitive AI-driven debt management.
+            </p>
+            <div className="flex gap-4">
+               <SocialLink icon={<BsTwitter size={18} />} href="https://x.com/debt_ai" />
+               <SocialLink icon={<BsLinkedin size={18} />} href="https://linkedin.com/company/debt-ai" />
+               <SocialLink icon={<BsInstagram size={18} />} href="https://instagram.com/debt_ai" />
+            </div>
+          </div>
 
-       <div
-        ref={footerTriggerRef}
-        className="h-[120vh] w-full bg-transparent pointer-events-none relative z-0"
-      ></div>
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Product</h4>
+            <ul className="space-y-4 text-sm font-bold">
+              <li><Link to="/onboarding" className="text-stone-400 hover:text-white transition-colors">Analyzer</Link></li>
+              <li><Link to="/debtai" className="text-stone-400 hover:text-white transition-colors">Intelligence</Link></li>
+              <li><Link to="/pending" className="text-stone-400 hover:text-white transition-colors">Track Sheets</Link></li>
+              <li><Link to="/calendar" className="text-stone-400 hover:text-white transition-colors">Sync Calendar</Link></li>
+            </ul>
+          </div>
 
-       <footer
-              ref={footerRef}
-              className="fixed bottom-0 left-0 w-full h-screen z-50 flex items-center justify-center text-stone-200 overflow-hidden"
-              style={{ willChange: "transform, backdrop-filter" }}
-            >
-              <div className="w-full max-w-7xl mx-auto px-6 h-full flex flex-col justify-between py-12 md:py-20">
-                {/* Top Section: CTA & Nav */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mt-10">
-                  <div className="md:col-span-7 space-y-8 footer-content">
-                    <h2 className="text-6xl md:text-8xl font-bold tracking-tight text-(--mint)">
-                      Ready to <br />
-                      <span className="text-emerald-500">breathe easy?</span>
-                    </h2>
-                    <p className="text-xl text-stone-300 max-w-lg leading-relaxed">
-                      Join the financial revolution that prioritizes your peace of
-                      mind over profit. No judgment, just clarity.
-                    </p>
-                    <div className="flex gap-4 pt-4">
-                      <button
-                      onClick={() => navigate(actionLink || "/newsletter")}
-                      className="px-8 py-4 mb-2 rounded-full bg-white text-orange-950 text-lg font-bold hover:bg-emerald-300 transition-colors flex items-center gap-2">
-                        
-                        {buttonText || "Subscribe to our Newsletter"} <BsArrowRight />
-                      </button>
-                    </div>
-                  </div>
-      
-                  {/* Links Grid */}
-                  <div className="md:col-span-5 grid grid-cols-2 gap-8 pt-4">
-                    <div className="footer-content">
-                      <h4 className="text-emerald-500 font-mono font-semibold text-l uppercase tracking-widest mb-6">
-                        Platform
-                      </h4>
-                      <ul className="space-y-4 text-lg font-medium text-stone-400">
-                        <li>
-                          <a
-                            href="#features"
-                            className="hover:text-(--mint) transition-colors flex items-center gap-2 group"
-                          >
-                            Features{" "}
-                            <BsArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity text-xs" />
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/premium"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            Pricing
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="#testimonials"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            Testimonials
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="#team"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            Our Team
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="footer-content">
-                      <h4 className="text-emerald-500 font-mono font-semibold text-l uppercase tracking-widest mb-6">
-                        Company
-                      </h4>
-                      <ul className="space-y-4 text-lg font-medium text-stone-400">
-                        <li>
-                          <a
-                            href="/"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            About Us
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            Careers
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/legal"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            Privacy & Terms
-                          </a>
-                        </li>
-                        {/* <li>
-                          <a
-                            href="#"
-                            className="hover:text-(--mint) transition-colors"
-                          >
-                            
-                          </a>
-                        </li> */}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-      
-                {/* Bottom Section: Socials & Copyright */}
-                <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-end md:items-center gap-6 footer-content">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={logo}
-                      alt="Logo"
-                      className="h-8 w-auto"
-                    />
-                    <span className="text-2xl font-bold text-white tracking-tight">
-                      DebtAI
-                    </span>
-                  </div>
-      
-                  <div className="text-sm text-stone-500">
-                    © {new Date().getFullYear()} DebtAI Inc. All rights reserved.
-                  </div>
-      
-                  <div className="flex gap-6">
-                    <SocialLink icon={<BsTwitter />} href="https://www.x.com/debtaiofficial" />
-                    <SocialLink icon={<BsLinkedin />} href="https://www.linkedin.com/company/debtai/" />
-                    <SocialLink icon={<BsInstagram />} href="#" />
-                  </div>
-                </div>
-              </div>
-        </footer>
-    </div>
-  )
-}
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Company</h4>
+            <ul className="space-y-4 text-sm font-bold">
+              <li><Link to="/blogs" className="text-stone-400 hover:text-white transition-colors">Insights</Link></li>
+              <li><Link to="/support" className="text-stone-400 hover:text-white transition-colors">Help Center</Link></li>
+              <li><Link to="/support" className="text-stone-400 hover:text-white transition-colors">Contact</Link></li>
+            </ul>
+          </div>
 
-// Helper Component for Social Icons
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Legal</h4>
+            <ul className="space-y-4 text-sm font-bold">
+              <li><Link to="/legal" className="text-stone-400 hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/legal" className="text-stone-400 hover:text-white transition-colors">Privacy Protocol</Link></li>
+              <li><Link to="/legal" className="text-stone-400 hover:text-white transition-colors">Refund Policy</Link></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+           <p className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20">
+             © {new Date().getFullYear()} DebtAI Financial Architecture
+           </p>
+           <div className="flex gap-8 text-[9px] font-black uppercase tracking-widest text-white/20">
+              <span className="hover:text-white transition-colors cursor-default">v4.2.0 Stable</span>
+              <span className="hover:text-white transition-colors cursor-default text-emerald-500/50">Nodes Active</span>
+           </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
 const SocialLink = ({ icon, href }) => (
   <a
     href={href}
-    className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-stone-900 transition-all duration-300 hover:scale-110"
+    target="_blank"
+    rel="noreferrer"
+    className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-stone-500 hover:bg-white hover:text-black hover:border-white transition-all transform hover:scale-110"
   >
     {icon}
   </a>
 );
 
-
-export default Footer
+export default Footer;
