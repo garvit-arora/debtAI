@@ -199,8 +199,7 @@ function DebtAI() {
         }),
       });
 
-      const data = await response.json();
-      const botReply = data.reply || data.choices?.[0]?.message?.content || "Something went wrong.";
+      const botReply = await response.text();
       push(ref(db, `users/${user.uid}/chatSessions/${sessionId}/messages`), {
         text: botReply,
         sender: "bot",
