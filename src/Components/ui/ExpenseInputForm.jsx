@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Camera, Sparkles } from 'lucide-react';
 import { getDatabase, ref, push, runTransaction } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { usePopup } from "../../context/PopupContext";
+import { scanBill } from "../../services/AzureOCRService";
 import { app } from "../../firebase"; 
 
 const ExpenseInputForm = ({ onClose }) => {
   const { showPopup } = usePopup();
   const [loading, setLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const [formData, setFormData] = useState({
     amount: "",
-    date: new Date().toISOString().split('T')[0], // Default to today
-    category: "Food", // Default category
+    date: new Date().toISOString().split('T')[0],
+    category: "Food",
     description: ""
   });
 
@@ -20,6 +22,38 @@ const ExpenseInputForm = ({ onClose }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    try {
+      const result = await scanBill(file);
+      if (result.amount) {
+        setFormData(prev => ({ ...prev, amount: result.amount.toString() }));
+        showPopup({
+          title: "Architecture Scan Successful",
+          message: `Detected amount: ₹${result.amount}. System form updated.`,
+          type: "success"
+        });
+      } else {
+        showPopup({
+          title: "Partial Scan",
+          message: "System detected text but could not confidentially identify the total amount. Please verify manually.",
+          type: "warning"
+        });
+      }
+    } catch (err) {
+      showPopup({
+        title: "Scan Failure",
+        message: err.message || "Failed to process bill architecture.",
+        type: "error"
+      });
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -32,8 +66,6 @@ const ExpenseInputForm = ({ onClose }) => {
     if (user) {
       try {
         const amountVal = parseFloat(formData.amount);
-
-        // 1. Save the specific transaction details
         const transactionsRef = ref(db, `users/${user.uid}/transactions`);
         await push(transactionsRef, {
           ...formData,
@@ -41,120 +73,110 @@ const ExpenseInputForm = ({ onClose }) => {
           createdAt: Date.now()
         });
 
-        // 2. Update the TOTAL expenses for the user (so the Budget Bar updates)
         const totalExpensesRef = ref(db, `users/${user.uid}/expenses`);
         await runTransaction(totalExpensesRef, (currentTotal) => {
           return (currentTotal || 0) + amountVal;
         });
 
-        // 3. Close modal
         setLoading(false);
         onClose();
-        // Optional: Trigger a window reload or use context to refresh dashboard if needed
-        // For now, React state in Dashboard might need a trigger or simple reload works
         window.location.reload(); 
 
       } catch (error) {
         console.error("Error saving expense:", error);
         setLoading(false);
-        showPopup({ title: "Transaction Error", message: "Failed to synchronize expense payload.", type: "error" });
+        showPopup({ title: "Sync Error", message: "Failed to synchronize expense payload.", type: "error" });
       }
     }
   };
 
   return (
-    <div>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#30302e]/60 backdrop-blur-md p-4 animate-fadeIn">
-        <div className="bg-white w-full max-w-md rounded-[35px] shadow-2xl overflow-hidden animate-scaleUp">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
+      <div className="bg-[#0f0f0f] w-full max-w-lg rounded-[40px] border border-white/5 shadow-2xl overflow-hidden flex flex-col p-10">
+        
+        <div className="flex justify-between items-center mb-10">
+           <div>
+              <h3 className="text-3xl font-black tracking-tighter text-white italic">Add Expense<span className="text-stone-800">.</span></h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-600">New Transaction Entry</p>
+           </div>
+           <button onClick={onClose} className="p-3 bg-white/5 rounded-2xl hover:bg-rose-500/10 hover:text-rose-500 transition-all text-stone-500">
+             <X size={20} />
+           </button>
+        </div>
+
+        <form className="space-y-8" onSubmit={handleSubmit}>
           
-          {/* Modal Header */}
-          <div className="bg-[#5B2D2D] p-6 flex justify-between items-center">
-            <h3 className="text-[#f8ecdd] text-xl font-bold">Add New Expense</h3>
-            <button onClick={onClose} className="text-[#f8ecdd] hover:bg-white/10 p-2 rounded-full transition-colors">
-              <X size={24} />
-            </button>
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-widest text-stone-700 mb-3 block">Amount Architecture</label>
+            <div className="relative group">
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black text-2xl">₹</span>
+              <input 
+                type="number" 
+                name="amount"
+                value={formData.amount}
+                onChange={handleChange}
+                placeholder="0.00" 
+                className="w-full pl-12 pr-40 py-8 bg-white/[0.02] border border-white/5 rounded-3xl text-4xl font-black text-white focus:outline-none focus:border-white/10 transition-all placeholder:text-stone-900" 
+                required
+              />
+              <label className="absolute right-3 top-3 h-[calc(100%-24px)] px-6 bg-white/5 hover:bg-white/10 rounded-2xl cursor-pointer flex items-center gap-3 transition-all border border-white/5">
+                 {isScanning ? <Loader2 size={18} className="animate-spin text-cyan-500" /> : <Camera size={18} className="text-cyan-500" />}
+                 <span className="text-[10px] font-black uppercase tracking-widest">{isScanning ? 'Syncing...' : 'Scan Bill'}</span>
+                 <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={isScanning} />
+              </label>
+            </div>
           </div>
 
-          {/* Modal Form */}
-          <form className="p-8 flex flex-col gap-5" onSubmit={handleSubmit}>
-            
-            {/* Amount */}
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1 block">Amount</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-lg">₹</span>
-                <input 
-                  type="number" 
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  placeholder="0.00" 
-                  className="w-full pl-10 pr-4 py-4 bg-stone-50 rounded-2xl text-2xl font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" 
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Date & Category Row */}
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1 block">Date</label>
-                <div className="relative">
-                   <input 
-                     type="date" 
-                     name="date"
-                     value={formData.date}
-                     onChange={handleChange}
-                     className="w-full px-4 py-3 bg-stone-50 rounded-xl font-bold text-stone-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
-                     required
-                   />
-                </div>
-              </div>
-              <div className="flex-1">
-                 <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1 block">Category</label>
-                 <select 
-                   name="category"
-                   value={formData.category}
-                   onChange={handleChange}
-                   className="w-full px-4 py-3 bg-stone-50 rounded-xl font-bold text-stone-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
-                 >
-                   <option value="Food">Food</option>
-                   <option value="Transport">Transport</option>
-                   <option value="Rent">Rent</option>
-                   <option value="Entertainment">Entertainment</option>
-                   <option value="Others">Others</option>
-                 </select>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1 block">
-                What was this for?
-              </label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-stone-700 mb-2 block">Timestamp</label>
               <input 
-                type="text" 
-                name="description"
-                value={formData.description}
+                type="date" 
+                name="date"
+                value={formData.date}
                 onChange={handleChange}
-                placeholder="e.g. Starbucks, Uber..." 
-                className="w-full px-4 py-3 bg-stone-50 rounded-xl font-bold text-stone-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                className="w-full px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl font-bold text-white focus:outline-none focus:border-white/10 text-sm" 
+                required
               />
             </div>
+            <div>
+               <label className="text-[10px] font-black uppercase tracking-widest text-stone-700 mb-2 block">Classification</label>
+               <select 
+                 name="category"
+                 value={formData.category}
+                 onChange={handleChange}
+                 className="w-full px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl font-bold text-white focus:outline-none focus:border-white/10 text-sm appearance-none"
+               >
+                 {["Food", "Transport", "Rent", "Wellness", "Debt Paydown", "Others"].map(c => (
+                   <option key={c} value={c}>{c}</option>
+                 ))}
+               </select>
+            </div>
+          </div>
 
-            {/* Save Button */}
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="mt-4 w-full py-4 bg-foreground hover:opacity-90 text-background font-bold rounded-2xl shadow-lg transition-all transform active:scale-95 flex justify-center items-center gap-2"
-            >
-              {loading ? <Loader2 className="animate-spin" /> : "Save Expense"}
-            </button>
-          </form>
-        </div>
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-widest text-stone-700 mb-2 block">Annotation</label>
+            <input 
+              type="text" 
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="e.g. Starbucks, Uber..." 
+              className="w-full px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl font-bold text-white focus:outline-none focus:border-white/10 text-sm" 
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading || isScanning}
+            className="w-full py-6 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-stone-200 active:scale-95 transition-all flex justify-center items-center gap-3 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="animate-spin" /> : <>Save Transaction <Sparkles size={18}/></>}
+          </button>
+        </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default ExpenseInputForm;

@@ -1,95 +1,151 @@
 import React from "react";
-import { NavLink, useNavigate, Link } from "react-router-dom";
-import {
-  LayoutGrid,
-  ListTodo,
-  CalendarClock,
-  Sparkle,
-  FileText,
-  Layers,
+import { useNavigate, useLocation } from "react-router-dom";
+import { 
+  LayoutGrid, 
+  CreditCard, 
+  Calendar, 
+  BookOpen, 
+  User, 
+  LogOut, 
+  HelpCircle, 
   Settings,
-  HelpCircle
+  MessageSquare,
+  TrendingDown,
+  Zap,
+  ArrowRightLeft,
+  Briefcase,
+  Layers,
+  BarChart3,
+  Search,
+  PieChart,
+  X
 } from "lucide-react";
-import logo2 from "../../assets/icons/logo2.png";
+import { getAuth, signOut } from "firebase/auth";
+import { app } from "../../firebase";
+import { useMode } from "../../context/ModeContext";
+import logo from '../../assets/icons/logo2.png'
 
-const navGroupTitle = "text-[10px] font-black uppercase tracking-[0.2em] text-stone-600 mb-4 px-4";
-
-const NavItem = ({ to, icon: Icon, label, badge }) => (
-  <NavLink 
-    to={to} 
-    className={({ isActive }) => 
-      `group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 mb-1 border border-transparent ${
-        isActive 
-          ? "bg-white/5 text-white border-white/5 shadow-sm" 
-          : "text-stone-400 hover:bg-white/5 hover:text-white"
-      }`
-    }
+const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`
+      w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group
+      ${active 
+        ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
+        : "text-stone-500 hover:text-white hover:bg-white/5"}
+    `}
   >
-    <div className="flex items-center gap-3">
-      <Icon size={18} className="transition-transform group-hover:scale-105" />
-      <span className="text-sm font-bold tracking-tight">{label}</span>
-    </div>
-    {badge && (
-      <span className="text-[10px] bg-white/10 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest">
-        {badge}
-      </span>
-    )}
-  </NavLink>
+    <Icon size={18} className={`${active ? "text-black" : "group-hover:text-white"}`} />
+    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
+  </button>
 );
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { mode, switchMode, debtsCount } = useMode();
+  const auth = getAuth(app);
+
+  const isWealth = mode === 'wealth';
+
+  const menuItems = isWealth ? [
+    { icon: LayoutGrid, label: "Wealth Dashboard", path: "/dashboard" },
+    { icon: MessageSquare, label: "Wealth AI Helper", path: "/wealth-ai" },
+    { icon: Briefcase, label: "My Investments", path: "/portfolio" },
+    { icon: BarChart3, label: "Stock Market", path: "/stocks" },
+    { icon: Layers, label: "Mutual Funds", path: "/mutual-funds" },
+    { icon: Zap, label: "Crypto Market", path: "/crypto" },
+    { icon: BookOpen, label: "Financial Blogs", path: "/blogs" },
+  ] : [
+    { icon: LayoutGrid, label: "Main Dashboard", path: "/dashboard" },
+    { icon: CreditCard, label: "My Debts", path: "/pending" },
+    { icon: MessageSquare, label: "AI Helper", path: "/debtai" },
+    { icon: Calendar, label: "Payment Dates", path: "/calendar" },
+    { icon: Zap, label: "Think Twice", path: "/think-twice" },
+    { icon: BookOpen, label: "Knowledge Hub", path: "/blogs" },
+  ];
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/login");
+  };
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden animate-in fade-in duration-300"
-          onClick={onClose}
-        />
-      )}
+      <div 
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity lg:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        onClick={onClose}
+      />
 
-      <div className={`
-        fixed inset-y-0 left-0 z-[101] w-72 bg-[#0d0d0d] border-r border-white/5 flex flex-col p-6 font-sans transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static lg:block
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+      <aside className={`
+        fixed inset-y-0 left-0 z-[101] w-72 bg-[#0d0d0d] border-r border-white/5 flex flex-col p-6 font-sans transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static h-full
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-      
-      <div className="flex items-center justify-between mb-12 px-2">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 transition-transform">
-            <img src={logo2} alt="DebtAI" className="w-6 h-6 object-contain" />
-          </div>
-          <span className="text-xl font-black tracking-tighter text-white">DebtAI</span>
-        </Link>
-      </div>
-
-      {/* NAVIGATION SECTION */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar space-y-8 pr-1">
-        <div>
-          <h4 className={navGroupTitle}>Navigation</h4>
-          <NavItem to="/dashboard" icon={LayoutGrid} label="Dashboard" />
-          <NavItem to="/pending" icon={ListTodo} label="Active Debts" />
-          <NavItem to="/calendar" icon={CalendarClock} label="Calendar" />
-          <NavItem to="/debtai" icon={Sparkle} label="Intelligence" />
-          <NavItem to="/blogs" icon={FileText} label="Blogs" />
+        <div className="flex items-center justify-between mb-12 px-2">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden">
+                    <img src={logo} alt="DebtAI Logo" className="w-full h-full object-contain p-2" />
+                </div>
+                <h1 className="text-xl font-black italic tracking-tighter text-white uppercase">{isWealth ? "WealthAI" : "DebtAI"}</h1>
+            </div>
+            <button onClick={onClose} className="lg:hidden text-stone-500 hover:text-white transition-colors">
+              <X size={20} />
+            </button>
         </div>
-      </div>
 
-      {/* FOOTER: SETTINGS ONLY */}
-      <div className="mt-auto pt-6 border-t border-white/5">
-        <div className="flex items-center justify-between px-2 text-stone-500">
-           <div className="flex items-center gap-4">
-              <button onClick={() => navigate('/settings')} className="hover:text-white transition-colors"><Settings size={18} /></button>
-              <button onClick={() => navigate('/support')} className="hover:text-white transition-colors"><HelpCircle size={18} /></button>
+        <nav className="flex-1 space-y-2 overflow-y-auto hide-scrollbar">
+           <div className="px-6 mb-4">
+              <p className="text-[9px] font-black text-stone-800 uppercase tracking-[0.3em]">{isWealth ? "Grow Your Money" : "Pay Your Debts"}</p>
            </div>
-           <div className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">
-             © 2026 DebtAI
+           
+           {menuItems.map((item) => (
+             <SidebarItem
+               key={item.label}
+               icon={item.icon}
+               label={item.label}
+               active={location.pathname === item.path}
+               onClick={() => { navigate(item.path); onClose(); }}
+             />
+           ))}
+
+           <div className="pt-8 px-6">
+              <div className="h-px bg-white/5 w-full mb-8"></div>
+              {isWealth ? (
+                <button 
+                  onClick={() => { switchMode('repayment'); navigate("/dashboard"); onClose(); }}
+                  className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all"
+                >
+                   <ArrowRightLeft size={18} />
+                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">Go Back to Debts</span>
+                </button>
+              ) : (
+                <button 
+                  disabled={debtsCount > 0}
+                  onClick={() => switchMode('wealth')}
+                  className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl border border-white/5 transition-all
+                    ${debtsCount > 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-cyan-500/10 hover:text-cyan-500'}
+                  `}
+                >
+                   <Briefcase size={18} className={debtsCount === 0 ? "text-cyan-500" : ""} />
+                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">Start Investing</span>
+                </button>
+              )}
            </div>
+        </nav>
+
+        <div className="mt-8 pt-8 border-t border-white/5 space-y-2">
+            <SidebarItem icon={User} label="Profile" active={location.pathname === "/profile"} onClick={() => { navigate("/profile"); onClose(); }} />
+            <SidebarItem icon={Settings} label="Settings" active={location.pathname === "/settings"} onClick={() => { navigate("/settings"); onClose(); }} />
+            <SidebarItem icon={HelpCircle} label="Help & Support" active={location.pathname === "/support"} onClick={() => { navigate("/support"); onClose(); }} />
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-6 py-4 text-stone-700 hover:text-rose-500 transition-colors"
+            >
+              <LogOut size={18} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sign Out</span>
+            </button>
         </div>
-      </div>
-
-    </div>
+      </aside>
     </>
   );
 }

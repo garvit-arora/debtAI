@@ -2,33 +2,30 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import send from "../../assets/images/send.svg";
 import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason } from "microsoft-cognitiveservices-speech-sdk";
-import { MdArrowBack, MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose, MdTranslate, MdMic, MdStop, MdDiamond } from "react-icons/md"; 
+import { MdAdd, MdChatBubbleOutline, MdDelete, MdWarningAmber, MdMenu, MdClose, MdTranslate, MdMic, MdStop, MdDiamond } from "react-icons/md"; 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, push, onValue, serverTimestamp, remove, update } from "firebase/database";
 import { app } from "../../firebase";
-import { useTheme } from "../../context/ThemeContext";
-import { BrainCircuit, LayoutDashboard, Sun, Moon, ArrowUpRight } from "lucide-react";
+import { BrainCircuit, LayoutDashboard, ArrowUpRight, User, Sparkles } from "lucide-react";
 import PricingModal from "../Premium/Premium";
 import { usePopup } from "../../context/PopupContext";
+import logo from '../../assets/icons/logo2.png'
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-opacity">
-      <div className="bg-card border border-border rounded-3xl p-8 w-full max-w-sm shadow-2xl transition-all">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 text-red-500 transition-colors">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+      <div className="bg-[#0d0d0d] border border-white/10 rounded-[48px] p-10 w-full max-w-sm shadow-3xl text-center uppercase tracking-tight">
+          <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500">
              <MdWarningAmber size={32} />
           </div>
-          <h3 className="text-2xl font-bold mb-2">{title}</h3>
-          <p className="text-muted font-medium mb-8 leading-relaxed">{message}</p>
-          <div className="flex gap-4 w-full">
-            <button onClick={onClose} className="btn-secondary flex-1 py-3 text-sm">Cancel</button>
-            <button onClick={onConfirm} className="flex-1 py-3 rounded-full font-bold text-white bg-red-500 hover:bg-red-600 transition-colors text-sm">Delete</button>
+          <h3 className="text-2xl font-black italic tracking-tighter mb-2 text-white">{title}</h3>
+          <p className="text-stone-500 font-bold text-xs mb-8 leading-relaxed px-4">{message}</p>
+          <div className="flex gap-4">
+            <button onClick={onClose} className="flex-1 py-4 rounded-2xl font-black text-[10px] tracking-widest bg-white/5 text-stone-500 hover:text-white transition-all uppercase">Cancel</button>
+            <button onClick={onConfirm} className="flex-1 py-4 rounded-2xl font-black text-[10px] tracking-widest bg-rose-500 text-white hover:bg-rose-600 transition-all uppercase">Delete</button>
           </div>
-        </div>
       </div>
     </div>
   );
@@ -47,7 +44,6 @@ const BotMessage = ({ text }) => {
       setShowTranslation(!showTranslation);
       return;
     }
-
     setIsTranslating(true);
     try {
       const response = await fetch(`${translatorEndpoint}/translate?api-version=3.0&to=${targetLang}`, {
@@ -71,33 +67,26 @@ const BotMessage = ({ text }) => {
 
   return (
     <div className="space-y-4">
-      <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed font-medium">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+      <div className="flex justify-end pt-2">
+        <button
+          onClick={() => translateText()}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-500 hover:text-cyan-500 transition-colors"
+        >
+          <MdTranslate size={14} />
+          {isTranslating ? "Translating..." : (showTranslation ? "Show Original" : "Hindi")}
+        </button>
       </div>
       
-      {showTranslation && translatedText && (
-        <div className="mt-4 p-6 bg-secondary border border-border rounded-2xl animate-in fade-in slide-in-from-top-2">
-            <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">Translated Architecture</div>
-            <div className="text-lg leading-relaxed">{translatedText}</div>
-        </div>
-      )}
-
-      <button
-        onClick={() => translateText()}
-        className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted hover:text-foreground transition-colors"
-      >
-        <MdTranslate size={14} />
-        {isTranslating ? "Processing..." : (showTranslation ? "Hide Translation" : "Translate to Hindi")}
-      </button>
+      <div className="prose prose-invert prose-p:my-2 prose-h1:my-4 prose-h2:my-3 prose-h3:my-2 prose-ul:my-2 prose-li:my-0 max-w-none text-[15px] font-medium tracking-tight text-white leading-relaxed">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {showTranslation && translatedText ? translatedText : text}
+        </ReactMarkdown>
+      </div>
     </div>
   );
 };
 
-function DebtAI() {
-  const { isDarkMode, toggleTheme } = useTheme();
-  const { showPopup } = usePopup();
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function DebtAI() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -115,15 +104,13 @@ function DebtAI() {
   const messagesEndRef = useRef(null);
   const auth = getAuth(app);
   const db = getDatabase(app);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
       if (currentUser) {
+        setUser(currentUser);
         onValue(ref(db, `users/${currentUser.uid}`), (snapshot) => {
           const data = snapshot.val();
           setUserData(data);
@@ -134,25 +121,19 @@ function DebtAI() {
         onValue(ref(db, `users/${currentUser.uid}/chatSessions`), (snapshot) => {
           const data = snapshot.val();
           if (data) {
-            const sortedSessions = Object.entries(data)
-              .map(([id, session]) => ({ id, ...session }))
-              .sort((a, b) => b.timestamp - a.timestamp);
-            setSessions(sortedSessions);
-          } else {
-            setSessions([]);
-          }
+            setSessions(Object.entries(data).map(([id, s]) => ({ id, ...s })).sort((a,b) => b.timestamp - a.timestamp));
+          } else setSessions([]);
         });
-      }
+      } else navigate("/login");
     });
-
-    if (location.state?.autoPrompt) {
-        setInput(location.state.autoPrompt);
-        // We delay the actual handleSend slightly to ensure user is loaded
-        setTimeout(() => handleSend(location.state.autoPrompt), 500);
-    }
-
     return () => unsubscribeAuth();
-  }, [auth, db, location]);
+  }, [auth]);
+
+  useEffect(() => {
+    if (location.state?.prompt && user && messages.length === 0) {
+      handleSend(location.state.prompt);
+    }
+  }, [location.state, user]);
 
   useEffect(() => {
     if (currentSessionId && user) {
@@ -161,207 +142,242 @@ function DebtAI() {
         if (data) setMessages(Object.values(data));
       });
     }
-  }, [currentSessionId, user, db]);
+  }, [currentSessionId, user]);
 
-  useEffect(scrollToBottom, [messages]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = async (forcedInput = null) => {
-    const messageText = forcedInput || input;
-    if (!messageText.trim() || !user || isTyping) return;
-    if (!isPremium && remainingPrompts <= 0) return showPopup({ title: "Inquiry Capacity", message: "Standard capacity reached. Please upgrade to Pro Tier for extended architecture sessions.", type: "warning" });
+    const text = forcedInput || input;
+    if (!text.trim() || !user || isTyping) return;
+    if (!isPremium && remainingPrompts <= 0) return setShowPricingModal(true);
 
     let sessionId = currentSessionId;
     if (!sessionId) {
       const newSessionRef = push(ref(db, `users/${user.uid}/chatSessions`), {
-        title: messageText.slice(0, 30) + "...",
+        title: text.slice(0, 30) + "...",
         timestamp: serverTimestamp(),
       });
       sessionId = newSessionRef.key;
       setCurrentSessionId(sessionId);
     }
 
-    const newMessage = { text: messageText, sender: "user", timestamp: Date.now() };
-    push(ref(db, `users/${user.uid}/chatSessions/${sessionId}/messages`), newMessage);
+    const newMessage = { text, sender: "user", timestamp: Date.now() };
+    const userMsgRef = push(ref(db, `users/${user.uid}/chatSessions/${sessionId}/messages`), newMessage);
     setInput("");
     setIsTyping(true);
 
-    if (!isPremium) {
-      update(ref(db, `users/${user.uid}`), { remainingPrompts: remainingPrompts - 1 });
-    }
+    if (!isPremium) update(ref(db, `users/${user.uid}`), { remainingPrompts: remainingPrompts - 1 });
 
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: messageText,
-          messages: [{ role: "system", content: "You are DebtAI, a calm, empathetic financial architect. Your goal is to simplify complex financial patterns into human sentences without judgment." }, ...messages.map(m => ({ role: m.sender === "bot" ? "assistant" : "user", content: m.text })), { role: "user", content: messageText }],
+          prompt: text,
+          userData: userData,
+          messages: messages.slice(-5).map(m => ({ role: m.sender === "bot" ? "assistant" : "user", content: m.text })),
         }),
       });
 
-      const botReply = await response.text();
-      push(ref(db, `users/${user.uid}/chatSessions/${sessionId}/messages`), {
-        text: botReply,
-        sender: "bot",
-        timestamp: Date.now(),
+      if (!response.ok) throw new Error("Stream failed");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let botReply = "";
+
+      // Add an initial empty bot message
+      setMessages(prev => [...prev, { text: "", sender: "bot", timestamp: Date.now(), isStreaming: true }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        botReply += chunk;
+        
+        // Update the last message (the streaming one)
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          newMsgs[newMsgs.length - 1].text = botReply;
+          return newMsgs;
+        });
+      }
+
+      // Finalize the message in database
+      push(ref(db, `users/${user.uid}/chatSessions/${sessionId}/messages`), { text: botReply, sender: "bot", timestamp: Date.now() });
+      setMessages(prev => {
+        const newMsgs = [...prev];
+        newMsgs[newMsgs.length - 1].isStreaming = false;
+        return newMsgs;
       });
-    } catch (error) {
-      console.error("AI Error:", error);
-    } finally {
-      setIsTyping(false);
+
+    } catch (e) {
+      console.error(e);
+      setMessages(prev => [...prev, { text: "Protocol Error: Connection lost.", sender: "bot", timestamp: Date.now() }]);
+    } finally { 
+      setIsTyping(false); 
     }
   };
 
-  const handleSpeechToText = () => {
+  const handleSpeech = () => {
     const speechKey = import.meta.env.VITE_AZURE_SPEECH_KEY;
     const speechRegion = import.meta.env.VITE_AZURE_REGION;
-    
     const speechConfig = SpeechConfig.fromSubscription(speechKey, speechRegion);
-    speechConfig.speechRecognitionLanguage = "en-US";
-    const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-    const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
-
+    const recognizer = new SpeechRecognizer(speechConfig, AudioConfig.fromDefaultMicrophoneInput());
     setIsListening(true);
     recognizer.recognizeOnceAsync((result) => {
-      if (result.reason === ResultReason.RecognizedSpeech) {
-        setInput(result.text);
-      }
+      if (result.reason === ResultReason.RecognizedSpeech) setInput(result.text);
       setIsListening(false);
       recognizer.close();
     });
   };
 
-  const initiateDelete = (e, id) => {
-      e.stopPropagation();
-      setDeleteModal({ open: true, sessionId: id });
-  };
-
-  const confirmDelete = async () => {
-      if(!user || !deleteModal.sessionId) return;
-      await remove(ref(db, `users/${user.uid}/chatSessions/${deleteModal.sessionId}`));
-      if(currentSessionId === deleteModal.sessionId) {
-          setCurrentSessionId(null);
-          setMessages([]);
-      }
-      setDeleteModal({ open: false, sessionId: null });
-  };
-
   return (
-    <div className="flex h-screen bg-background text-foreground transition-colors duration-300 overflow-hidden font-sans relative">
+    <div className="flex h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black overflow-hidden uppercase">
       {showPricingModal && <PricingModal onClose={() => setShowPricingModal(false)} />}
       <ConfirmationModal 
         isOpen={deleteModal.open}
         onClose={() => setDeleteModal({ open: false, sessionId: null })}
-        onConfirm={confirmDelete}
-        title="Purge Intelligence Session?"
-        message="This action will permanently delete this conversation from the architectural logs."
+        onConfirm={async () => {
+           await remove(ref(db, `users/${user.uid}/chatSessions/${deleteModal.sessionId}`));
+           if(currentSessionId === deleteModal.sessionId) { setCurrentSessionId(null); setMessages([]); }
+           setDeleteModal({ open: false, sessionId: null });
+        }}
+        title="Delete Session"
+        message="This conversation will be permanently removed."
       />
 
-      <div className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden transition-opacity ${showMobileSidebar ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setShowMobileSidebar(false)} />
-      
-      <aside className={`fixed md:relative inset-y-0 left-0 w-80 bg-background border-r border-border z-50 flex flex-col p-6 transition-transform duration-300 ${showMobileSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
-        <div className="flex flex-col gap-6 mb-10">
-            <button 
-                onClick={() => navigate("/dashboard")}
-                className="flex items-center gap-3 px-5 py-4 bg-secondary/50 hover:bg-secondary rounded-2xl transition-all border border-border group"
-            >
-                <LayoutDashboard size={20} className="text-muted group-hover:text-foreground transition-colors" />
-                <span className="text-sm font-bold tracking-tight">Return to Dashboard</span>
+      {/* SIDEBAR */}
+      <aside className={`fixed md:relative inset-y-0 left-0 w-80 bg-[#0d0d0d] border-r border-white/5 z-50 flex flex-col p-6 transition-transform duration-500 ease-in-out ${showMobileSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+         <div className="mb-12">
+            <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3 px-6 py-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all text-stone-500 hover:text-white w-full">
+               <LayoutDashboard size={18} />
+               <span className="text-[10px] font-black tracking-widest">Dashboard</span>
             </button>
-            <div className="flex items-center justify-end px-2">
-                <button onClick={() => setShowMobileSidebar(false)} className="md:hidden p-2 hover:bg-secondary rounded-xl transition-colors"><MdClose size={20} /></button>
-            </div>
-        </div>
-        <button onClick={() => { setCurrentSessionId(null); setMessages([]); setShowMobileSidebar(false); }} className="btn-primary w-full py-4 flex items-center justify-center gap-2 mb-8 text-sm uppercase tracking-widest shadow-xl"><MdAdd size={20} /> New Architecture</button>
-        
-        <div className="flex-1 overflow-y-auto space-y-2 pr-2 hide-scrollbar">
-            {sessions.map((session) => (
-                <div key={session.id} onClick={() => { setCurrentSessionId(session.id); setShowMobileSidebar(false); }} className={`group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border ${currentSessionId === session.id ? "bg-foreground text-background border-foreground shadow-lg" : "border-transparent hover:bg-secondary"}`}>
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <MdChatBubbleOutline className="shrink-0" size={18} />
-                        <span className="truncate text-sm font-bold tracking-tight">{session.title}</span>
-                    </div>
-                    <button onClick={(e) => initiateDelete(e, session.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-500 p-1.5 transition-all"><MdDelete size={16} /></button>
-                </div>
+         </div>
+
+         <button onClick={() => { setCurrentSessionId(null); setMessages([]); setShowMobileSidebar(false); }} className="w-full py-5 bg-white text-black rounded-[24px] flex items-center justify-center gap-3 text-[10px] font-black tracking-widest shadow-2xl active:scale-95 transition-all mb-10">
+            <MdAdd size={20} /> New Chat
+         </button>
+
+         <div className="flex-1 overflow-y-auto space-y-2 pr-2 hide-scrollbar">
+            <p className="text-[9px] font-black text-stone-800 tracking-widest mb-4 px-2 uppercase">Your Conversations</p>
+            {sessions.map((s) => (
+               <div key={s.id} onClick={() => { setCurrentSessionId(s.id); setShowMobileSidebar(false); }} className={`group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border ${currentSessionId === s.id ? "bg-white text-black border-white" : "border-transparent hover:bg-white/5 text-stone-400"}`}>
+                  <div className="flex items-center gap-3 overflow-hidden">
+                     <MdChatBubbleOutline size={16} />
+                     <span className="truncate text-[10px] font-black tracking-tight">{s.title}</span>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); setDeleteModal({ open: true, sessionId: s.id }); }} className="opacity-0 group-hover:opacity-100 hover:text-rose-500 p-1"><MdDelete size={14} /></button>
+               </div>
             ))}
-        </div>
+         </div>
       </aside>
 
-      <div className="relative flex-1 flex flex-col h-full">
-        <header className="absolute top-0 w-full p-4 flex items-center justify-between z-10 md:hidden bg-background/80 backdrop-blur-md border-b border-border">
-            <button onClick={() => setShowMobileSidebar(true)} className="p-2 hover:bg-secondary rounded-xl transition-colors"><MdMenu size={24} /></button>
-            <h1 className="text-lg font-bold tracking-tight">DebtAI Intelligence</h1>
-            <div className="w-10 h-10"></div> 
-        </header>
-
-        {!currentSessionId && messages.length === 0 && (
-             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 z-0">
-                <div className="w-20 h-20 bg-foreground/5 rounded-[32px] flex items-center justify-center mb-8 border border-border"><BrainCircuit className="text-foreground" size={40} /></div>
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-4">How can I assist <br /><span className="text-foreground/40 italic"> {userData?.name || "your architecture"}?</span></h1>
-                <p className="text-muted text-xl font-medium max-w-lg">I have indexed your financial pattern. Pose any inquiry regarding optimization or strategy.</p>
-             </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto p-4 pb-48 space-y-8 pt-24 md:pt-12 scroll-smooth">
-          {messages.map((msg, index) => {
-            const isBot = msg.sender === "bot";
-            return (
-              <div key={index} className={`flex flex-col w-full animate-in slide-in-from-bottom-2 ${!isBot ? "items-end" : "items-start"}`}>
-                <div className={`flex items-center gap-2 mb-2 px-4 opacity-40 uppercase tracking-[0.2em] font-black text-[9px]`}>
-                   <span>{isBot ? 'Architect' : userData?.name || 'User'}</span>
-                   <span className="opacity-40">•</span>
-                   <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-                <div className={`max-w-[85%] md:max-w-[70%] p-6 rounded-[32px] transition-all relative ${!isBot ? "bg-foreground text-background shadow-xl rounded-tr-none" : "bg-card border border-border light-mode-shadow rounded-tl-none"}`}>
-                    <div className={`text-base leading-relaxed tracking-tight ${!isBot ? "font-bold" : "font-medium"}`}>
-                        {!isBot ? msg.text : <BotMessage text={msg.text} />}
-                    </div>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <footer className="absolute bottom-0 left-0 w-full p-6 md:p-10 flex flex-col items-center bg-gradient-to-t from-background via-background to-transparent z-10">
-          <div className="w-full max-w-4xl space-y-4">
-            {user && !isPremium && (
-                <div className="flex justify-between items-center px-5 py-2.5 bg-card/60 backdrop-blur-lg rounded-2xl border border-border shadow-sm mx-2">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${remainingPrompts === 0 ? "text-red-500" : "opacity-60"}`}>
-                        Capacity: {remainingPrompts} inquiries remaining
-                    </span>
-                    <button onClick={() => setShowPricingModal(true)} className="flex items-center gap-2 bg-foreground text-background px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all">
-                        <MdDiamond size={14} /> Extended Access
-                    </button>
-                </div>
-            )}
-
-            <div className="relative group">
-                <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    rows={1}
-                    placeholder={isListening ? "Listening..." : (user ? (remainingPrompts > 0 || isPremium ? "Input inquiry regarding financial architecture..." : "Standard capacity reached. Upgrade for entry.") : "Session Unauthorized")}
-                    disabled={!user || isTyping || isListening || (!isPremium && remainingPrompts === 0)}
-                    className={`w-full resize-none rounded-[32px] p-6 pr-32 border border-border bg-card/50 backdrop-blur-xl focus:bg-card focus:outline-none focus:ring-4 focus:ring-foreground/5 text-lg transition-all light-mode-shadow placeholder:opacity-40 font-medium ${isListening ? "border-red-500 ring-4 ring-red-500/10" : ""} ${(!isPremium && remainingPrompts === 0) ? "opacity-40 cursor-not-allowed" : ""}`}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                />
-                <div className="absolute right-4 bottom-3 flex gap-4">
-                    <button type="button" onClick={handleSpeechToText} disabled={!user || isTyping} className={`p-4 rounded-[20px] transition-all shadow-sm flex items-center justify-center ${isListening ? "bg-red-500 text-white animate-pulse" : "bg-card text-muted hover:text-foreground border border-border"}`}>
-                        {isListening ? <MdStop size={24} /> : <MdMic size={24} />}
-                    </button>
-                    <button type="button" onClick={() => handleSend()} disabled={!user || isTyping || isListening} className="p-4 bg-foreground text-background rounded-[20px] transition-all shadow-xl hover:opacity-90 disabled:opacity-20 flex items-center justify-center border border-foreground/10">
-                        <ArrowUpRight size={24} /> 
-                    </button>
-                </div>
+      {/* CHAT AREA */}
+      <div className="flex-1 flex flex-col relative h-full">
+         <header className="h-24 px-10 border-b border-white/5 flex items-center justify-between bg-[#050505] sticky top-0 z-40">
+            <div className="flex items-center gap-4">
+               <button onClick={() => setShowMobileSidebar(true)} className="md:hidden p-2 text-stone-400"><MdMenu size={24} /></button>
+               <h1 className="text-xl font-black italic tracking-tighter uppercase">AI Helper</h1>
             </div>
-          </div>
-        </footer>
+            {!isPremium && user && (
+               <button onClick={() => setShowPricingModal(true)} className="flex items-center gap-3 bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 px-6 py-2 rounded-full text-[9px] font-black tracking-widest hover:bg-cyan-500/20 transition-all uppercase">
+                  <MdDiamond size={16} /> {remainingPrompts} Credits
+               </button>
+            )}
+         </header>
+
+         <div className="flex-1 overflow-y-auto p-12 space-y-12 hide-scrollbar pb-64">
+            {!currentSessionId && messages.length === 0 ? (
+               <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-700">
+                  <div className="w-24 h-24 bg-white/5 rounded-[48px] flex items-center justify-center border border-white/10 shadow-3xl overflow-hidden p-4">
+                     <img src={logo} alt="DebtAI" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="space-y-4 max-w-xl">
+                     <h2 className="text-6xl font-black italic tracking-tighter leading-none">How can I help you,<br /><span className="text-cyan-500"> {userData?.name?.split(' ')[0] || "User"}?</span></h2>
+                     <p className="text-stone-400 font-bold text-lg tracking-tight">Ask me anything about your debts, savings, or investment strategy.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-10">
+                     {["How to pay off a 12% loan?", "Analyze my savings rate", "Stocks vs Mutual Funds", "Create a debt snowball plan"].map(q => (
+                        <button key={q} onClick={() => { setInput(q); handleSend(q); }} className="px-6 py-4 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black tracking-widest text-stone-500 transition-all uppercase">{q}</button>
+                     ))}
+                  </div>
+               </div>
+            ) : (
+               messages.map((msg, idx) => {
+                  const isBot = msg.sender === "bot";
+                  return (
+                     <div key={idx} className={`flex gap-6 animate-in slide-in-from-bottom-4 duration-500 ${isBot ? 'items-start' : 'items-start flex-row-reverse'}`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border overflow-hidden ${isBot ? 'bg-[#121212] border-white/5' : 'bg-[#121212] border-white/5'}`}>
+                           {isBot ? (
+                              <img src={logo} className="w-full h-full object-contain p-2" alt="AI Agent" />
+                           ) : (
+                              userData?.profileImg ? (
+                                <img src={userData.profileImg} className="w-full h-full object-cover" alt="User" />
+                              ) : (
+                                <span className="font-black text-xs text-white uppercase">{userData?.name?.[0] || 'U'}</span>
+                              )
+                           )}
+                        </div>
+                        <div className={`space-y-2 max-w-[80%] ${!isBot && 'text-right'}`}>
+                           <p className="text-[9px] font-black text-white tracking-widest uppercase mb-2">{isBot ? 'DebtAI Agent' : userData?.name?.split(' ')[0] || 'You'}</p>
+                           <div className={`p-8 rounded-[40px] shadow-3xl text-left border ${isBot ? 'bg-[#121212] border-white/5 rounded-tl-none' : 'bg-white text-black border-white rounded-tr-none'}`}>
+                              {isBot ? <BotMessage text={msg.text} /> : <p className="text-base font-medium tracking-tight leading-relaxed">{msg.text}</p>}
+                           </div>
+                           <p className="text-[9px] font-bold text-white uppercase pt-3">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                     </div>
+                  );
+               })
+            )}
+            
+            {isTyping && (!messages[messages.length-1]?.isStreaming) && (
+               <div className="flex gap-6 animate-in slide-in-from-bottom-4 duration-500 items-start">
+                  <div className="w-12 h-12 bg-[#121212] border border-white/5 rounded-2xl flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
+                     <img src={logo} className="w-full h-full object-contain p-2 opacity-50 animate-pulse" alt="AI Agent" />
+                  </div>
+                  <div className="space-y-2 max-w-[80%]">
+                     <p className="text-[9px] font-black text-white tracking-widest uppercase mb-2">DebtAI Agent</p>
+                     <div className="p-8 rounded-[40px] shadow-3xl text-left border bg-[#121212] border-white/5 rounded-tl-none flex items-center gap-3">
+                        <div className="flex space-x-1">
+                           <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                           <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                           <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce"></div>
+                        </div>
+                        <span className="text-xs font-bold text-stone-500 tracking-widest uppercase">Thinking..</span>
+                     </div>
+                  </div>
+               </div>
+            )}
+            <div ref={messagesEndRef} />
+         </div>
+
+         {/* INPUT AREA */}
+         <div className="absolute bottom-0 left-0 w-full p-10 bg-gradient-to-t from-[#050505] via-[#050505] to-transparent">
+            <div className="max-w-4xl mx-auto relative group">
+               <textarea 
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                  placeholder={isListening ? "Listening..." : "Tell me about your debts or goals..."}
+                  className="w-full bg-[#121212] border border-white/5 rounded-[40px] p-8 pr-48 text-lg font-bold outline-none focus:border-white/20 transition-all shadow-3xl placeholder:text-stone-800 placeholder:uppercase placeholder:text-xs placeholder:tracking-[0.2em] resize-none overflow-hidden"
+                  rows={2}
+                  disabled={isTyping || isListening}
+               />
+               <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-4">
+                  <button onClick={handleSpeech} className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all ${isListening ? 'bg-rose-500 border-rose-500 animate-pulse text-white' : 'bg-white/5 border-white/5 text-stone-600 hover:text-white'}`}>
+                     {isListening ? <MdStop size={24} /> : <MdMic size={24} />}
+                  </button>
+                  <button onClick={() => handleSend()} disabled={!input.trim() || isTyping} className="w-14 h-14 bg-white text-black rounded-2xl flex items-center justify-center shadow-2xl active:scale-95 transition-all disabled:opacity-20">
+                     <ArrowUpRight size={28} />
+                  </button>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );
 }
-
-export default DebtAI;
