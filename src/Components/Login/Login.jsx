@@ -16,7 +16,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { app } from "../../firebase";
 import { useTheme } from "../../context/ThemeContext";
 import { Eye, EyeOff, LogIn, Globe } from "lucide-react";
-import phoneMockup from "/home/masky-is-online/.gemini/antigravity/brain/bd507fd4-5d11-4b87-9597-f4e8a3f09613/hand_holding_debt_app_phone_1775753131204.png";
+import phoneMockup from "../../../public/login-image.png";
 
 export default function Login() {
   const navigate = useNavigate();
