@@ -17,8 +17,6 @@ import {
 } from 'lucide-react';
 import Footer from '../ui/Footer';
 import logo from '../../assets/icons/logo2.png';
-import founder1 from '../../assets/images/Founder1.jpeg';
-import founder2 from '../../assets/images/Founder2.jpeg';
 import PricingModal from '../Premium/Premium';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app } from "../../firebase";
@@ -120,7 +118,7 @@ const Landing = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold tracking-tight mb-8 leading-[1.1]"
+            className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-6 md:mb-8 leading-[1.1]"
           >
             AI that explains <br />
             <span className="text-emerald-600 dark:text-emerald-400">your finances, </span>
@@ -130,7 +128,7 @@ const Landing = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-muted text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-muted text-base md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed px-4"
           >
             Navigate debt and expenses with empathy. No complex charts, no judgment—just clear, human-readable insights to help you breathe easier.
           </motion.p>
@@ -139,24 +137,24 @@ const Landing = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-20 px-6"
           >
             <button 
               onClick={() => navigate('/login')}
-              className="w-full sm:w-auto px-10 py-4 bg-foreground text-background rounded-full font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity group"
+              className="w-full sm:w-auto px-8 md:px-10 py-3.5 md:py-4 bg-foreground text-background rounded-full font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity group text-sm md:text-base"
             >
-              Start your journey <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              Start your journey <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <button 
               onClick={() => navigate('/support')}
-              className="w-full sm:w-auto px-10 py-4 font-bold flex items-center justify-center gap-2 hover:bg-secondary rounded-full transition-colors group"
+              className="w-full sm:w-auto px-8 md:px-10 py-3.5 md:py-4 font-bold flex items-center justify-center gap-2 hover:bg-secondary rounded-full transition-colors group text-sm md:text-base"
             >
-              Contact Us <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              Contact Us <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </motion.div>
 
           {/* Prompt Grid Mockup */}
-          <div className="prompt-mosaic-container relative overflow-hidden h-[400px] mb-32 pointer-events-none select-none">
+          <div className="prompt-mosaic-container relative overflow-hidden h-[300px] md:h-[400px] mb-20 md:mb-32 pointer-events-none select-none">
             <div className="prompt-mosaic">
                {/* Multiple rows of prompts */}
                {[0, 1, 2].map((row) => (
@@ -182,7 +180,7 @@ const Landing = () => {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              className="text-3xl md:text-5xl font-bold mb-6"
+              className="text-2xl sm:text-3xl md:text-5xl font-bold mb-6 px-4"
             >
               {feature.title}
             </motion.h2>
@@ -202,7 +200,7 @@ const Landing = () => {
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className={`feature-image-container relative bg-gradient-to-br ${feature.gradient} rounded-[48px] p-8 md:p-16 h-[500px] md:h-[700px] overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 group`}
+              className={`feature-image-container relative bg-gradient-to-br ${feature.gradient} rounded-[32px] md:rounded-[48px] p-4 md:p-16 h-[400px] md:h-[700px] overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 group`}
             >
                <div className="glass-ui-mockup w-full h-full bg-white/40 dark:bg-black/60 rounded-3xl border border-white/20 shadow-2xl backdrop-blur-md overflow-hidden flex flex-col light-mode-shadow">
                   {/* Mock UI header */}
@@ -236,8 +234,8 @@ const Landing = () => {
         ))}
 
         {/* Explore Features Grid (Redesigned) */}
-        <section className="py-32 px-6 max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-center mb-20 leading-none">Designed for <br /><span className="text-stone-500">financial peace.</span></h2>
+        <section className="py-20 md:py-32 px-6 max-w-6xl mx-auto">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-center mb-12 md:mb-20 leading-none">Designed for <br /><span className="text-stone-500">financial peace.</span></h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-[#141414] border border-white/5 rounded-[32px] p-10 space-y-6">
                 <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center">
@@ -289,39 +287,7 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Founders Section */}
-        <section className="py-32 px-6 max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold">Built by humans,<br />for humans.</h2>
-            <p className="text-muted text-lg max-w-md md:text-right">Our mission is to help you navigate financial stress with empathy and clarity.</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8">
-           <div className="group relative aspect-[16/9] md:aspect-square overflow-hidden rounded-[48px] bg-secondary light-mode-shadow transition-all">
-               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 opactiy-60 group-hover:opacity-40 transition-opacity"></div>
-               <img 
-                 src={founder1} 
-                 alt="Garvit Arora" 
-                 className="absolute inset-0 w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
-               />
-               <div className="absolute bottom-10 left-10 z-20">
-                 <h3 className="text-2xl font-bold text-white tracking-tight">Garvit Arora</h3>
-                 <p className="text-white/70 font-medium">Founder & CEO</p>
-               </div>
-            </div>
-            <div className="group relative aspect-[16/9] md:aspect-square overflow-hidden rounded-[48px] bg-secondary light-mode-shadow transition-all">
-               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
-               <img 
-                 src={founder2} 
-                 alt="Pallavi Jain" 
-                 className="absolute inset-0 w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
-               />
-               <div className="absolute bottom-10 left-10 z-20">
-                 <h3 className="text-2xl font-bold text-white tracking-tight">Pallavi Jain</h3>
-                 <p className="text-white/70 font-medium">Founder & CTO</p>
-               </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Final CTA */}
         <section className="py-32 px-6">

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { getDatabase, ref, push, runTransaction } from "firebase/database";
 import { getAuth } from "firebase/auth";
+import { usePopup } from "../../context/PopupContext";
 import { app } from "../../firebase"; 
 
 const ExpenseInputForm = ({ onClose }) => {
+  const { showPopup } = usePopup();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     amount: "",
@@ -55,7 +57,7 @@ const ExpenseInputForm = ({ onClose }) => {
       } catch (error) {
         console.error("Error saving expense:", error);
         setLoading(false);
-        alert("Failed to save expense");
+        showPopup({ title: "Transaction Error", message: "Failed to synchronize expense payload.", type: "error" });
       }
     }
   };

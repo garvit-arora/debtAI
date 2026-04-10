@@ -37,11 +37,23 @@ const NavItem = ({ to, icon: Icon, label, badge }) => (
   </NavLink>
 );
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
 
   return (
-    <div className="w-72 h-screen bg-[#0d0d0d] border-r border-white/5 flex flex-col p-6 sticky top-0 overflow-hidden font-sans">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden animate-in fade-in duration-300"
+          onClick={onClose}
+        />
+      )}
+
+      <div className={`
+        fixed inset-y-0 left-0 z-[101] w-72 bg-[#0d0d0d] border-r border-white/5 flex flex-col p-6 font-sans transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static lg:block
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
       
       <div className="flex items-center justify-between mb-12 px-2">
         <Link to="/" className="flex items-center gap-3 group">
@@ -78,5 +90,6 @@ export default function Sidebar() {
       </div>
 
     </div>
+    </>
   );
 }

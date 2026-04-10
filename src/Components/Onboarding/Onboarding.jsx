@@ -170,7 +170,7 @@ export default function Onboarding() {
                    { text: "Terms & Conditions", sub: "Final step to activate your account." };
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0a0a] text-white font-sans flex items-center justify-center p-6 sm:p-12 selection:bg-white selection:text-black overflow-y-auto">
+    <div className="min-h-screen w-full bg-[#0a0a0a] text-white font-sans flex items-center justify-center p-4 sm:p-12 selection:bg-white selection:text-black overflow-y-auto">
       
       {isFinalizing ? (
           <div className="flex flex-col items-center gap-6 animate-pulse">
@@ -178,7 +178,7 @@ export default function Onboarding() {
               <h2 className="text-2xl font-bold tracking-tight uppercase tracking-[0.2em]">Syncing Architecture...</h2>
           </div>
       ) : (
-        <div className="w-full max-w-xl bg-[#141414] border border-white/10 rounded-[32px] overflow-hidden flex flex-col shadow-2xl relative">
+        <div className="w-full max-w-xl bg-[#141414] border border-white/10 rounded-2xl md:rounded-[32px] overflow-hidden flex flex-col shadow-2xl relative">
           
           {/* Progress Bar */}
           <div className="flex gap-1.5 px-10 pt-10 pb-4">
@@ -188,11 +188,11 @@ export default function Onboarding() {
           </div>
           <div className="px-10 text-[10px] font-black uppercase tracking-[0.3em] opacity-30">{progress.current} of {progress.total}</div>
 
-          <div className="p-10 flex-1 flex flex-col min-h-[400px]">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4 leading-tight">
+          <div className="p-6 md:p-10 flex-1 flex flex-col min-h-[350px] md:min-h-[400px]">
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tighter mb-4 leading-tight">
                 {phase === 2 && `Debt #${currentDebtIndex + 1}: `}{currentQ.text}
             </h2>
-            <p className="text-stone-500 font-medium text-lg mb-10 leading-relaxed">{currentQ.sub}</p>
+            <p className="text-stone-500 font-medium text-base md:text-lg mb-8 md:mb-10 leading-relaxed">{currentQ.sub}</p>
 
             <div className="flex-1">
                 {phase < 3 ? (
@@ -239,11 +239,11 @@ export default function Onboarding() {
                 )}
             </div>
 
-            <div className="mt-12 flex items-center justify-between pt-6 border-t border-white/5">
+            <div className="mt-8 md:mt-12 flex items-center justify-between pt-6 border-t border-white/5">
                 <button 
                     onClick={handleBack}
                     disabled={phase === 0 && basicIndex === 0}
-                    className="flex items-center gap-2 text-stone-500 font-bold text-sm uppercase tracking-widest hover:text-white transition-colors disabled:opacity-0"
+                    className="flex items-center gap-2 text-stone-500 font-bold text-[10px] md:text-sm uppercase tracking-widest hover:text-white transition-colors disabled:opacity-0"
                 >
                     <ArrowLeft size={16} /> Back
                 </button>
@@ -252,16 +252,16 @@ export default function Onboarding() {
                     {phase === 4 ? (
                         <button 
                             onClick={() => saveToFirebase(formData)}
-                            className="px-10 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-stone-200 transition-all flex items-center gap-3 shadow-2xl"
+                            className="px-6 md:px-10 py-4 md:py-5 bg-white text-black rounded-xl md:rounded-2xl font-black text-[10px] md:text-sm uppercase tracking-widest hover:bg-stone-200 transition-all flex items-center gap-3 shadow-2xl"
                         >
-                            <Check size={18} /> Agree & Continue
+                            <Check size={18} /> Agree
                         </button>
                     ) : (
                         <button 
                             onClick={handleNext}
-                            className="px-10 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-stone-200 transition-all flex items-center gap-3 shadow-2xl"
+                            className="px-6 md:px-10 py-4 md:py-5 bg-white text-black rounded-xl md:rounded-2xl font-black text-[10px] md:text-sm uppercase tracking-widest hover:bg-stone-200 transition-all flex items-center gap-3 shadow-2xl"
                         >
-                            Continue <ArrowRight size={18} />
+                            Next <ArrowRight size={18} />
                         </button>
                     )}
                 </div>

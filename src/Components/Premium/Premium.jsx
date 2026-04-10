@@ -4,12 +4,14 @@ import { getAuth } from "firebase/auth";
 import { app } from "../../firebase";
 import { useTheme } from "../../context/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePopup } from "../../context/PopupContext";
 
 const PricingModal = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState("monthly");
   const auth = getAuth(app);
   const { isDarkMode } = useTheme();
+  const { showPopup } = usePopup();
   
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL_TWO; 
 
@@ -27,14 +29,14 @@ const PricingModal = ({ onClose }) => {
     if (planType === "free") return onClose();
     
     const user = auth.currentUser;
-    if (!user) return alert("Please login first.");
+    if (!user) return showPopup({ title: "Authorization", message: "Initial authentication required for upgrade.", type: "warning" });
     setLoading(true);
     try {
       const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) { alert("Razorpay SDK failed to load."); setLoading(false); return; }
+      if (!isLoaded) { showPopup({ title: "System Module", message: "Razorpay SDK failed to load.", type: "error" }); setLoading(false); return; }
       const response = await fetch(`${BACKEND_URL}/create-order`, { method: "POST" });
       const orderData = await response.json();
-      if (!orderData.id) { alert("Server error."); setLoading(false); return; }
+      if (!orderData.id) { showPopup({ title: "Server Response", message: "Critical error in order generation.", type: "error" }); setLoading(false); return; }
 
       const options = {
         key: "rzp_test_S182UxzRik68G2",
@@ -56,9 +58,9 @@ const PricingModal = ({ onClose }) => {
                 }),
              });
              const verifyData = await verifyRes.json();
-             if (verifyData.status === "success") { alert("Premium Active!"); onClose(); } 
-             else { alert("Verification failed."); }
-          } catch (e) { alert("Error confirming payment."); }
+             if (verifyData.status === "success") { showPopup({ title: "Access Granted", message: "Pro Tier Active! All systems initialized.", type: "success" }); onClose(); } 
+             else { showPopup({ title: "Verification", message: "Payment verification mismatch.", type: "error" }); }
+          } catch (e) { showPopup({ title: "System Error", message: "Error confirming payment protocol.", type: "error" }); }
         },
         prefill: { name: user.displayName || "User", email: user.email },
         theme: { color: "#000000" },
@@ -66,7 +68,7 @@ const PricingModal = ({ onClose }) => {
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();
     } catch (error) {
-      alert("Something went wrong.");
+      showPopup({ title: "Protocol Error", message: "Something went wrong in the transaction layer.", type: "error" });
     } finally {
       setLoading(false);
     }

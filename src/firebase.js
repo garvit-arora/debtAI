@@ -15,8 +15,9 @@ const firebaseConfig = {
 
 
 // Initialize Firebase
-export const app = firebaseConfig.projectId ? initializeApp(firebaseConfig) : null;
-export const analytics = (app && typeof window !== "undefined") ? getAnalytics(app) : null;
+const appInstance = firebaseConfig.projectId ? initializeApp(firebaseConfig) : null;
+export const app = appInstance;
+export const analytics = (appInstance && typeof window !== "undefined") ? getAnalytics(appInstance) : null;
 
 if (!app) {
   console.warn("Firebase configuration is missing. Firebase features will not be available.");

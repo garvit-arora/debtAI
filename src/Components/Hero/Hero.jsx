@@ -8,8 +8,6 @@ import {
 import logo from "../../assets/icons/logo2.png";
 import background from "../../assets/images/image1.png";
 import background2 from "../../assets/images/bg2.png";
-import founder1 from "../../assets/images/Founder1.jpeg";
-import founder2 from "../../assets/images/Founder2.jpeg";
 import { useEffect, useRef } from "react";
 import DomeGallery from "../ui/DomeGallery";
 import Footer from "../ui/Footer";
@@ -201,9 +199,6 @@ function Hero() {
               <a href="#features" className={navLinkClass}>
                 Features
               </a>
-              <a href="#founders" className={navLinkClass}>
-                Founders
-              </a>
               <a href="#testimonials" className={navLinkClass}>
                 Testimonials
               </a>
@@ -315,35 +310,7 @@ function Hero() {
         </div>
       </section>
 
-      <section id="founders" className="pb-22 bg-(--teal)">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 section-heading">
-            <h2 className="text-5xl font-bold text-(--brown)">
-              Built by humans, <br /> for humans.
-            </h2>
-            <a
-              href="/team"
-              className="text-emerald-800 font-medium hover:underline mt-4 md:mt-0"
-            >
-              Read our story &rarr;
-            </a>
-          </div>
 
-          <div className="grid md:grid-cols-2  gap-8">
-            <FounderCard
-              name="Garvit Arora"
-              role="Founder & CEO"
-              imgSrc={founder1}
-            />
-
-            <FounderCard
-              name="Pallavi Jain"
-              role="Founder & CTO"
-              imgSrc={founder2}
-            />
-          </div>
-        </div>
-      </section>
 
       <section className="py-32 bg-gray-950 text-(--light-purple) overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 text-center mb-12 section-heading">
@@ -387,28 +354,6 @@ const FeatureCard = ({ title, desc, tag, icon }) => (
   </div>
 );
 
-const FounderCard = ({ name, role, color, imgSrc }) => (
-  <a
-    href="/team"
-    className="group relative overflow-hidden rounded-3xl aspect-[4/3] flex items-end p-8 transition-all hover:shadow-2xl"
-  >
-    <img
-      src={imgSrc}
-      alt={name}
-      className="absolute inset-0 w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
-    />
 
-    <div
-      className={`absolute inset-0 ${color} transition-transform duration-700 group-hover:scale-105`}
-    ></div>
-
-    <div className="relative z-10 text-white translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-      <h3 className="text-2xl font-bold">{name}</h3>
-      <p className="text-stone-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        {role}
-      </p>
-    </div>
-  </a>
-);
 
 export default Hero;

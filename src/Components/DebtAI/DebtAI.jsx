@@ -11,6 +11,7 @@ import { app } from "../../firebase";
 import { useTheme } from "../../context/ThemeContext";
 import { BrainCircuit, LayoutDashboard, Sun, Moon, ArrowUpRight } from "lucide-react";
 import PricingModal from "../Premium/Premium";
+import { usePopup } from "../../context/PopupContext";
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
@@ -94,6 +95,7 @@ const BotMessage = ({ text }) => {
 
 function DebtAI() {
   const { isDarkMode, toggleTheme } = useTheme();
+  const { showPopup } = usePopup();
   const navigate = useNavigate();
   const location = useLocation();
   const [messages, setMessages] = useState([]);
@@ -166,7 +168,7 @@ function DebtAI() {
   const handleSend = async (forcedInput = null) => {
     const messageText = forcedInput || input;
     if (!messageText.trim() || !user || isTyping) return;
-    if (!isPremium && remainingPrompts <= 0) return alert("Standard capacity reached. Please upgrade.");
+    if (!isPremium && remainingPrompts <= 0) return showPopup({ title: "Inquiry Capacity", message: "Standard capacity reached. Please upgrade to Pro Tier for extended architecture sessions.", type: "warning" });
 
     let sessionId = currentSessionId;
     if (!sessionId) {

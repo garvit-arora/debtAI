@@ -7,7 +7,7 @@ const Footer = () => {
   return (
     <footer className="w-full bg-background border-t border-border pt-20 pb-12 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
           
           <div className="col-span-2 lg:col-span-2 space-y-8">
             <Link to="/" className="flex items-center gap-3">

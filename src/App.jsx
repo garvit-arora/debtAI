@@ -22,6 +22,7 @@ import PremiumModal from "../src/Components/Premium/Premium"
 import Legal from './Components/ui/Legal';
 import Support from './Components/ui/Support';
 import { ThemeProvider } from './context/ThemeContext';
+import { PopupProvider } from './context/PopupContext';
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
     <>
     <ThemeProvider>
     <AuthProvider>
+    <PopupProvider>
     <Routes>
       <Route path="/" element={<Landing />} />
 
@@ -112,6 +114,7 @@ function App() {
     </Routes>
     <InstallPrompt />
     
+    </PopupProvider>
   </AuthProvider>
   </ThemeProvider>
   </>

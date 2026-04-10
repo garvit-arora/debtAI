@@ -29,6 +29,7 @@ import {
   Zap,
   Menu
 } from "lucide-react";
+import { usePopup } from "../../context/PopupContext";
 
 const strategies = [
   { id: "stress_first", label: "Stress First", desc: "Target high anxiety debts." },
@@ -42,6 +43,7 @@ export default function Profile() {
   const db = getDatabase(app);
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const { showPopup } = usePopup();
   
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,7 @@ export default function Profile() {
       await signOut(auth);
       navigate("/login");
     } catch (error) {
-      alert("Error signing out: " + error.message);
+      showPopup({ title: "Session", message: "Error signing out: " + error.message, type: "error" });
     }
   };
 
@@ -121,7 +123,7 @@ export default function Profile() {
         strategy: formData.strategy
       });
     } catch (error) {
-      alert("Update failed.");
+      showPopup({ title: "Update Failed", message: "Registry synchronization failed.", type: "error" });
     } finally {
       setSavingProfile(false);
     }
@@ -132,7 +134,7 @@ export default function Profile() {
     try {
       await update(ref(db, `users/${user.uid}`), { settings: formData.settings });
     } catch (error) {
-      alert("Settings failed.");
+      showPopup({ title: "Configuration", message: "Matrix settings failed to save.", type: "error" });
     } finally {
       setSavingSettings(false);
     }
@@ -146,9 +148,9 @@ export default function Profile() {
     if(!formData.email) return;
     try {
       await sendPasswordResetEmail(auth, formData.email);
-      alert(`Instructions sent to ${formData.email}.`);
+      showPopup({ title: "Security", message: `Protocol instructions sent to ${formData.email}.`, type: "success" });
     } catch (error) {
-      alert(error.message);
+      showPopup({ title: "Security Warning", message: error.message, type: "error" });
     }
   };
 
@@ -168,12 +170,12 @@ export default function Profile() {
       await remove(ref(db, `users/${user.uid}`));
       await deleteUser(user);
     } catch (error) {
-      alert("Error: " + error.message);
+      showPopup({ title: "Purge Error", message: "Error: " + error.message, type: "error" });
     }
   };
 
   const handleSaveDebt = async () => {
-    if(!currentDebt.name || !currentDebt.amount) return alert("Required fields missing.");
+    if(!currentDebt.name || !currentDebt.amount) return showPopup({ title: "Input Required", message: "Required fields missing in debt unit.", type: "warning" });
     const newDebtObj = { ...currentDebt, amount: parseFloat(currentDebt.amount), interest: parseFloat(currentDebt.interest) };
     let updatedDebts = [...formData.debts];
     if (editingDebtIndex !== null) updatedDebts[editingDebtIndex] = newDebtObj;
@@ -182,7 +184,7 @@ export default function Profile() {
       await update(ref(db, `users/${user.uid}`), { debts: updatedDebts });
       setShowDebtModal(false);
     } catch (e) {
-      alert("Error saving debt");
+      showPopup({ title: "Position Error", message: "Error initializing portfolio position.", type: "error" });
     }
   };
 
@@ -192,7 +194,7 @@ export default function Profile() {
     try {
       await update(ref(db, `users/${user.uid}`), { debts: updatedDebts });
     } catch (e) {
-      alert("Error deleting debt");
+      showPopup({ title: "Position Error", message: "Error purging portfolio position.", type: "error" });
     }
   };
 

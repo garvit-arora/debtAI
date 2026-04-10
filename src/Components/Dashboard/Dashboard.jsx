@@ -112,13 +112,18 @@ export default function Dashboard() {
   
   // Real Deltas
   const [deltas, setDeltas] = useState({ balance: 0, income: 0, expense: 0 });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
-  const auth = getAuth(app);
-  const db = getDatabase(app);
+  const auth = app ? getAuth(app) : null;
+  const db = app ? getDatabase(app) : null;
   const notificationRef = useRef(null);
 
   useEffect(() => {
+    if (!auth || !db) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -243,19 +248,25 @@ export default function Dashboard() {
   const optimizationValue = (parseFloat(userData?.income || 0) * 0.1).toLocaleString('en-IN', {maximumFractionDigits: 0});
 
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black">
+    <div className="flex h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black overflow-hidden">
       
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         
         {/* NAVBAR */}
-        <header className="h-24 border-b border-white/5 flex items-center justify-end px-12 bg-[#050505] sticky top-0 z-40 gap-10">
+        <header className="h-20 md:h-24 border-b border-white/5 flex items-center justify-between lg:justify-end px-4 md:px-12 bg-[#050505] sticky top-0 z-40 gap-4 md:gap-10">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 text-stone-400 hover:text-white transition-colors"
+            >
+              <Layout size={24} />
+            </button>
             <button 
               onClick={() => setShowPricingModal(true)}
-              className="px-6 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl"
+              className="px-4 md:px-6 py-2 md:py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl truncate"
             >
-              Upgrade Plan
+              Upgrade
             </button>
             <button onClick={() => navigate('/support')} className="text-stone-600 hover:text-white transition-all">
                <MessageSquare size={22} />
@@ -275,40 +286,40 @@ export default function Dashboard() {
                   </div>
                 )}
             </div>
-            <div onClick={() => navigate("/profile")} className="flex items-center gap-4 pl-10 border-l border-white/5 group cursor-pointer">
-              <div className="text-right">
+            <div onClick={() => navigate("/profile")} className="flex items-center gap-3 md:gap-4 lg:pl-10 lg:border-l border-white/5 group cursor-pointer">
+              <div className="text-right hidden sm:block">
                 <div className="text-sm font-black tracking-tighter">{userData?.name || "Member"}</div>
                 <div className="text-[9px] font-black uppercase tracking-widest text-stone-700">Profile Logged</div>
               </div>
-              <div className="w-11 h-11 rounded-2xl bg-white/5 flex items-center justify-center text-white ring-1 ring-white/10 shadow-xl">
-                 <User size={22} />
+              <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-white/5 flex items-center justify-center text-white ring-1 ring-white/10 shadow-xl">
+                 <User size={18} className="md:size-22" />
               </div>
             </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-12 pt-4 pb-12 hide-scrollbar space-y-12">
+        <div className="flex-1 overflow-y-auto px-4 md:px-12 pt-4 pb-12 hide-scrollbar space-y-8 md:space-y-12">
           
           <section className="animate-in fade-in slide-in-from-left-4 duration-700">
-             <h2 className="text-7xl font-black tracking-tighter text-white mb-4 italic uppercase">Dashboard<span className="text-stone-800">.</span></h2>
-             <p className="text-stone-600 font-bold text-lg tracking-tight">Financial intelligence data for {userData?.name || "the user"}.</p>
+             <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white mb-2 md:mb-4 italic uppercase">Dashboard<span className="text-stone-800">.</span></h2>
+             <p className="text-stone-600 font-bold text-base md:text-lg tracking-tight">Financial intelligence data for {userData?.name || "the user"}.</p>
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
-            <DashboardCard className="lg:col-span-2 relative overflow-hidden bg-black border-white/5 h-40">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 items-stretch">
+            <DashboardCard className="md:col-span-2 lg:col-span-2 relative overflow-hidden bg-black border-white/5 h-36 md:h-40">
                <div className="relative z-10 flex flex-col h-full justify-between py-0">
                   <div>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-2 md:mb-4">
                       <span className="text-stone-600 text-[10px] font-black uppercase tracking-[0.4em] tracking-widest">Available Balance</span>
                     </div>
-                    <div className="flex items-baseline gap-6">
-                      <h3 className="text-5xl font-black tracking-tighter text-white">₹{formattedBalance}</h3>
-                      <span className="text-white text-[10px] font-black uppercase tracking-widest opacity-40">+{deltas.balance}% Growth</span>
+                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6">
+                      <h3 className="text-3xl md:text-5xl font-black tracking-tighter text-white">₹{formattedBalance}</h3>
+                      <span className="text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest opacity-40">+{deltas.balance}% Growth</span>
                     </div>
                   </div>
                </div>
             </DashboardCard>
 
-            <div className="h-40 w-full">
+            <div className="h-36 md:h-40 w-full">
               <MetricCard 
                 title="Monthly Income" 
                 amount={userData?.income || "0"} 
@@ -316,7 +327,7 @@ export default function Dashboard() {
                 isPositive={true} 
               />
             </div>
-            <div className="h-40 w-full">
+            <div className="h-36 md:h-40 w-full">
               <MetricCard 
                 title="Monthly Expense" 
                 amount={userData?.expenses || "0"} 
@@ -343,7 +354,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="h-[380px] w-full">
+              <div className="h-[300px] md:h-[420px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <defs>
