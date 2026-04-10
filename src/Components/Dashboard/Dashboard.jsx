@@ -199,11 +199,11 @@ export default function Dashboard() {
     })).sort((a,b) => b.uv - a.uv).slice(0, 4);
     setDebtRadialData(processedRadial);
 
-    // Mock Income/Balance deltas for stability
+    // Derive Income/Balance deltas
     setDeltas(prev => ({ 
         ...prev, 
-        income: 4.2, 
-        balance: 6.7 
+        income: 0, 
+        balance: 0 
     }));
   };
 
@@ -230,7 +230,17 @@ export default function Dashboard() {
 
   if (loading) return <div className="flex h-screen w-full items-center justify-center bg-[#050505]"><Loader2 className="animate-spin text-white" size={48} /></div>;
 
-  const readinessValue = 68;
+  const totalDebt = Object.values(userData?.debts || {}).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+  const readinessValue = userData?.income ? Math.max(0, Math.min(100, Math.round(100 - ((totalDebt / (parseFloat(userData.income) * 12)) * 100)))) : 0;
+
+  const availableBalance = (parseFloat(userData?.income || 0) - parseFloat(userData?.expenses || 0));
+  const formattedBalance = availableBalance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  const totalChartExpenses = chartData.reduce((sum, d) => sum + (d.expenses || 0), 0);
+  const avgPaydownVelocity = chartData.length > 0 ? (totalChartExpenses / chartData.length) : 0;
+  const formattedAvgVelocity = avgPaydownVelocity.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  const optimizationValue = (parseFloat(userData?.income || 0) * 0.1).toLocaleString('en-IN', {maximumFractionDigits: 0});
 
   return (
     <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black">
@@ -291,7 +301,7 @@ export default function Dashboard() {
                       <span className="text-stone-600 text-[10px] font-black uppercase tracking-[0.4em] tracking-widest">Available Balance</span>
                     </div>
                     <div className="flex items-baseline gap-6">
-                      <h3 className="text-5xl font-black tracking-tighter text-white">₹83,172.64</h3>
+                      <h3 className="text-5xl font-black tracking-tighter text-white">₹{formattedBalance}</h3>
                       <span className="text-white text-[10px] font-black uppercase tracking-widest opacity-40">+{deltas.balance}% Growth</span>
                     </div>
                   </div>
@@ -404,7 +414,7 @@ export default function Dashboard() {
              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <HabitCard 
                   title="50/30/20 Alignment" 
-                  content="AI detects you can optimize ₹4,200 by shifting debt payments to high-interest first." 
+                  content={`AI detects you can optimize ₹${optimizationValue} by shifting debt payments to high-interest first.`} 
                   isLocked={false} 
                 />
                 <HabitCard title="Micro-Investment Logic" content="" isLocked={true} onPricingClick={() => setShowPricingModal(true)} />
@@ -461,7 +471,7 @@ export default function Dashboard() {
                    </div>
                    <div className="px-10 py-6 bg-white/[0.02] border-t border-white/5 flex justify-between items-center">
                       <span className="text-[10px] font-black uppercase tracking-widest text-stone-600">Avg. Paydown Velocity</span>
-                      <span className="text-lg font-black text-white">₹4,281.00</span>
+                      <span className="text-lg font-black text-white">₹{formattedAvgVelocity}</span>
                    </div>
                 </DashboardCard>
              </div>

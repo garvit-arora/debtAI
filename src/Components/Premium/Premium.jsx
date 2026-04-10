@@ -80,7 +80,7 @@ const PricingModal = ({ onClose }) => {
       description: "Explore core financial modules.",
       icon: <Activity className="text-blue-500" size={32} />,
       features: [
-        "5 AI Inquiries daily",
+        "20 AI Inquiries daily",
         "Legacy latency layers",
         "Manual data sync",
         "Basic debt tracking"

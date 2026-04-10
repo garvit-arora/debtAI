@@ -277,7 +277,7 @@ export default function Blogs() {
       
       <Sidebar />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto hide-scrollbar relative">
         
         {/* HERO / NAVBAR INTEGRATED (ONLY IF NOT IN BLOG DETAIL) */}
         {!selectedBlog && (
@@ -331,7 +331,7 @@ export default function Blogs() {
           </div>
         )}
 
-        <div className={`flex-1 overflow-y-auto px-12 pb-24 hide-scrollbar ${selectedBlog ? 'pt-12' : 'pt-24'}`}>
+        <div className={`px-12 pb-24 ${selectedBlog ? 'pt-12' : 'pt-24'}`}>
           
           {selectedBlog ? (
             <div className="max-w-5xl mx-auto space-y-16 animate-in fade-in duration-500">

@@ -53,7 +53,7 @@ const BotMessage = ({ text }) => {
         method: "POST",
         headers: {
           "Ocp-Apim-Subscription-Key": translatorKey,
-          "Ocp-Apim-Subscription-Region": "centralindia",
+          "Ocp-Apim-Subscription-Region": import.meta.env.VITE_AZURE_REGION,
           "Content-Type": "application/json",
         },
         body: JSON.stringify([{ text }]),
@@ -104,7 +104,7 @@ function DebtAI() {
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [userData, setUserData] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
-  const [remainingPrompts, setRemainingPrompts] = useState(5);
+  const [remainingPrompts, setRemainingPrompts] = useState(20);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -126,7 +126,7 @@ function DebtAI() {
           const data = snapshot.val();
           setUserData(data);
           setIsPremium(data?.isPremium || false);
-          setRemainingPrompts(data?.remainingPrompts ?? 5);
+          setRemainingPrompts(data?.remainingPrompts ?? 20);
         });
 
         onValue(ref(db, `users/${currentUser.uid}/chatSessions`), (snapshot) => {
@@ -188,20 +188,19 @@ function DebtAI() {
     }
 
     try {
-      const response = await fetch("https://priyanshu-69.openai.azure.com/openai/deployments/priyanshu-69/chat/completions?api-version=2024-08-01-preview", {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "api-key": import.meta.env.VITE_AZURE_OPENAI_KEY,
         },
         body: JSON.stringify({
+          prompt: messageText,
           messages: [{ role: "system", content: "You are DebtAI, a calm, empathetic financial architect. Your goal is to simplify complex financial patterns into human sentences without judgment." }, ...messages.map(m => ({ role: m.sender === "bot" ? "assistant" : "user", content: m.text })), { role: "user", content: messageText }],
-          max_tokens: 800,
         }),
       });
 
       const data = await response.json();
-      const botReply = data.choices[0].message.content;
+      const botReply = data.reply || data.choices?.[0]?.message?.content || "Something went wrong.";
       push(ref(db, `users/${user.uid}/chatSessions/${sessionId}/messages`), {
         text: botReply,
         sender: "bot",
@@ -216,7 +215,7 @@ function DebtAI() {
 
   const handleSpeechToText = () => {
     const speechKey = import.meta.env.VITE_AZURE_SPEECH_KEY;
-    const speechRegion = import.meta.env.VITE_AZURE_SPEECH_REGION;
+    const speechRegion = import.meta.env.VITE_AZURE_REGION;
     
     const speechConfig = SpeechConfig.fromSubscription(speechKey, speechRegion);
     speechConfig.speechRecognitionLanguage = "en-US";
